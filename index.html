@@ -6,372 +6,740 @@
 <!-- 照片裡是活動來賓，不希望被搜尋引擎收錄 -->
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
-<meta name="color-scheme" content="dark">
-<meta name="theme-color" content="#05060a">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#ffffff">
 <title>拍貼取件</title>
 <style>
   :root {
-    --bg: #05060a;
-    --card: rgba(14, 15, 24, .62);
-    --ink: #f2f3f8;
-    --muted: #9ea3b5;
-    --line: rgba(255, 255, 255, .12);
-    --a1: #4d7dff;
-    --a2: #9a63ff;
+    --bg: #ffffff;
+    --ink: #0f1115;
+    --ink-2: #4b5160;
+    --muted: #7b8190;
+    --line: #e8eaee;
+    --soft: #f5f6f8;
+    --accent: #2563eb;
+    --r-lg: 20px;
+    --r-md: 14px;
+    --r-sm: 10px;
   }
   * { box-sizing: border-box; }
   html { -webkit-text-size-adjust: 100%; background: var(--bg); }
   body {
     margin: 0;
-    color: var(--ink);
-    font: 16px/1.6 "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
     min-height: 100vh;
     min-height: 100dvh;
     display: flex;
     flex-direction: column;
-    padding: max(20px, env(safe-area-inset-top)) 16px max(28px, env(safe-area-inset-bottom));
+    color: var(--ink);
+    background: var(--bg);
+    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC",
+          "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
+  h1, h2, p { margin: 0; }
+  button { font: inherit; color: inherit; }
+  a { color: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+  h1:focus { outline: none; }
 
-  /* 粒子背景：固定在最底層，不擋任何點擊 */
-  #bg {
-    position: fixed;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-    pointer-events: none;
-  }
+  /* ── 版面 ─────────────────────────────────────────────── */
+  .wrap { width: 100%; max-width: 480px; margin: 0 auto; padding: 0 20px; }
+  body.wide .wrap { max-width: 960px; }
 
-  /* margin:auto 讓內容少的時候垂直置中、多的時候從上面開始排 */
-  main { width: 100%; max-width: 480px; margin: auto; }
-  header { text-align: center; padding: 8px 0 20px; }
-  header .site { font-size: 13px; letter-spacing: .2em; color: var(--muted); }
-  body.home header { visibility: hidden; }
+  .top { padding-top: max(12px, env(safe-area-inset-top)); }
+  .bar { display: flex; align-items: center; justify-content: space-between; height: 48px; }
+  .brand { font-weight: 700; font-size: 15px; letter-spacing: .03em; }
+  .chip {
+    font: 600 12px/1 ui-monospace, "SF Mono", Consolas, monospace;
+    letter-spacing: .1em;
+    color: var(--ink-2);
+    background: var(--soft);
+    border-radius: 999px;
+    padding: 7px 11px;
+  }
+  .chip[hidden] { display: none; }
 
-  /* 玻璃卡片：半透明加模糊，粒子在後面流動但字仍然讀得清楚 */
-  .card {
-    background: var(--card);
-    -webkit-backdrop-filter: blur(16px) saturate(140%);
-    backdrop-filter: blur(16px) saturate(140%);
-    border: 1px solid var(--line);
-    border-radius: 18px;
-    padding: 24px 20px;
-    margin-bottom: 16px;
-  }
-  .center { text-align: center; }
-  h1 { font-size: 22px; line-height: 1.35; margin: 0 0 6px; }
-  h2 { font-size: 15px; margin: 0 0 12px; color: var(--muted); font-weight: 600; }
-  p { margin: 0 0 12px; }
-  .muted { color: var(--muted); font-size: 14px; }
-  .big { font-size: 30px; font-weight: 700; margin: 14px 0 10px; }
-  .emoji { font-size: 44px; line-height: 1; margin-bottom: 8px; }
-  code.id {
-    display: inline-block;
-    background: rgba(255, 255, 255, .08);
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    padding: 1px 10px;
-    font: 600 15px/1.7 ui-monospace, "SF Mono", Consolas, monospace;
-    letter-spacing: .12em;
-  }
+  main { flex: 1; padding-top: 20px; padding-bottom: calc(48px + env(safe-area-inset-bottom)); }
 
-  /* 首頁（沒帶編號）：直接把字放在粒子上，不包卡片 */
-  .hero { text-align: center; padding: 4vh 4px; position: relative; }
-  /* 文字後面墊一層柔和的暗色暈，粒子再亮也不會蓋到字。
-     z-index:-1 落在畫布之上（畫布在 DOM 裡比較前面），內容之下。 */
-  .hero::before {
-    content: '';
-    position: absolute;
-    inset: -40px -70px;
-    z-index: -1;
-    background: radial-gradient(ellipse at center,
-      rgba(5, 6, 10, .82) 0%, rgba(5, 6, 10, .6) 42%, rgba(5, 6, 10, 0) 72%);
-    pointer-events: none;
-  }
-  .hero h1 {
-    font-size: clamp(38px, 11vw, 60px);
-    font-weight: 700;
-    letter-spacing: .04em;
-    margin: 0 0 16px;
-    background: linear-gradient(90deg, #9cc0ff, #c69cff 55%, #ff9db3);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    color: transparent;
-  }
-  .hero .lead {
-    font-size: 17px;
-    max-width: 22em;
-    margin: 0 auto;
-    text-wrap: balance;
-    color: rgba(242, 243, 248, .86);
-    text-shadow: 0 1px 14px rgba(0, 0, 0, .8);
-  }
+  /* ── 文字 ─────────────────────────────────────────────── */
+  h1 { font-size: 26px; line-height: 1.3; font-weight: 700; letter-spacing: -.01em; }
+  h2 { font-size: 15px; font-weight: 600; }
+  .lead { color: var(--ink-2); margin-top: 8px; }
+  .small { font-size: 14px; color: var(--muted); }
 
+  /* ── 按鈕 ─────────────────────────────────────────────── */
   .btn {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    min-height: 50px;
+    width: 100%;
+    min-height: 52px;
     padding: 0 20px;
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    background: rgba(255, 255, 255, .06);
-    color: var(--ink);
-    font: inherit;
+    border: 1px solid transparent;
+    border-radius: var(--r-md);
     font-weight: 600;
     text-decoration: none;
     cursor: pointer;
-    width: 100%;
+    transition: background-color .15s, transform .1s, opacity .15s;
     -webkit-tap-highlight-color: transparent;
   }
-  .btn.primary {
-    background: linear-gradient(135deg, var(--a1), var(--a2));
-    border-color: transparent;
-    color: #fff;
-  }
-  .btn:active { transform: scale(.98); }
-  .btn.small { min-height: 40px; font-size: 14px; border-radius: 10px; }
+  .btn:active { transform: scale(.985); }
+  .btn-primary { background: var(--ink); color: #fff; }
+  .btn-primary:hover { background: #000; }
+  .btn-secondary { background: #fff; border-color: var(--line); color: var(--ink); }
+  .btn-secondary:hover { background: #fafbfc; }
+  .btn[disabled], .btn[aria-busy="true"] { opacity: .55; cursor: progress; pointer-events: none; }
 
-  .composite {
-    display: block;
-    width: 100%;
-    height: auto;
-    border-radius: 10px;
-    border: 1px solid var(--line);
-    margin: 16px 0;
-    background: rgba(255, 255, 255, .04);
+  .link {
+    background: none;
+    border: 0;
+    padding: 6px 2px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent);
+    cursor: pointer;
   }
-  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .grid figure { margin: 0; }
-  .grid img {
+  .link[disabled] { opacity: .5; cursor: progress; }
+
+  .ico { display: inline-flex; width: 20px; height: 20px; flex: none; }
+  .ico svg { width: 100%; height: 100%; }
+
+  /* ── 置中狀態（尚未上線／連線失敗／編號錯誤／首頁）────────── */
+  .state { text-align: center; padding-top: 9vh; }
+  .badge {
+    width: 64px; height: 64px;
+    margin: 0 auto 24px;
+    display: grid; place-items: center;
+    background: var(--soft);
+    border-radius: 20px;
+    color: var(--ink);
+  }
+  .badge .ico { width: 28px; height: 28px; }
+  .state .lead { max-width: 20em; margin-left: auto; margin-right: auto; text-wrap: balance; }
+  .state .btn { max-width: 320px; margin: 28px auto 0; }
+  .state .status { margin-top: 14px; min-height: 22px; }
+
+  /* ── 照片上線 ─────────────────────────────────────────── */
+  .ready { display: grid; gap: 28px; }
+  .stage {
+    background: var(--soft);
+    border-radius: var(--r-lg);
+    padding: 20px;
+  }
+  .stage .imgbtn { display: block; width: 100%; padding: 0; border: 0; background: none; cursor: zoom-in; }
+  /* 手機：限制高度，讓下方的「下載」按鈕在第一屏內就看得到（矮螢幕也是）。
+     寬度由 aspect-ratio 依高度算出來，圖不會被拉伸或留白邊。 */
+  .strip {
+    display: block;
+    height: min(52dvh, 480px);
+    width: auto;
+    max-width: 100%;
+    margin: 0 auto;
+    aspect-ratio: 1181 / 1748;
+    object-fit: contain;
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, .08), 0 12px 32px rgba(16, 24, 40, .10);
+  }
+  .actions { display: grid; gap: 10px; margin-top: 24px; }
+
+  .originals { margin-top: 36px; }
+  .originals .row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .count {
+    display: inline-block;
+    min-width: 22px;
+    margin-left: 6px;
+    padding: 1px 7px;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    color: var(--ink-2);
+    background: var(--soft);
+    border-radius: 999px;
+  }
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px 12px; }
+  .tile .imgbtn { display: block; width: 100%; padding: 0; border: 0; background: none; cursor: zoom-in; }
+  .tile img {
     display: block;
     width: 100%;
     aspect-ratio: 4 / 3;
     object-fit: cover;
-    border-radius: 8px;
-    border: 1px solid var(--line);
-    margin-bottom: 8px;
-    background: rgba(255, 255, 255, .04);
+    border-radius: var(--r-sm);
+    background: var(--soft);
   }
-  .tip {
-    font-size: 13px;
-    color: var(--muted);
-    background: rgba(255, 255, 255, .06);
-    border-radius: 10px;
-    padding: 10px 12px;
-    margin: 0;
+  .tile .cap { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; font-size: 13px; color: var(--ink-2); }
+  .tile .dl {
+    display: grid; place-items: center;
+    width: 36px; height: 36px; margin: -6px -8px -6px 0;
+    border-radius: 999px;
+    color: var(--ink);
+    text-decoration: none;
   }
-  .spinner {
-    width: 28px; height: 28px;
-    border: 3px solid var(--line);
-    border-top-color: var(--a1);
-    border-radius: 50%;
-    margin: 12px auto;
-    animation: spin .8s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  @media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 3s; } }
+  .tile .dl:hover { background: var(--soft); }
+  .tile .dl .ico { width: 18px; height: 18px; }
 
-  /* 不支援 backdrop-filter 的瀏覽器：卡片改成幾乎不透明，不然字會疊在粒子上看不清 */
-  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-    .card { background: rgba(14, 15, 24, .92); }
+  @media (min-width: 880px) {
+    .ready { grid-template-columns: minmax(300px, 380px) 1fr; gap: 64px; align-items: start; }
+    .stage { position: sticky; top: 24px; }
+    .strip { height: auto; width: 100%; }
+    .grid { grid-template-columns: repeat(3, 1fr); }
+    .side { padding-top: 8px; }
+    .state { padding-top: 14vh; }
+  }
+
+  /* 圖片載入前後 */
+  img[data-fade] { opacity: 0; transition: opacity .25s; }
+  img[data-fade].loaded { opacity: 1; }
+
+  /* ── 載入骨架 ─────────────────────────────────────────── */
+  .sk {
+    background: linear-gradient(90deg, var(--soft) 25%, #eceef2 37%, var(--soft) 63%);
+    background-size: 400% 100%;
+    animation: shimmer 1.4s ease infinite;
+    border-radius: var(--r-sm);
+  }
+  @keyframes shimmer { from { background-position: 100% 0; } to { background-position: 0 0; } }
+  .sk-title { height: 30px; width: 55%; }
+  .sk-line { height: 16px; width: 80%; margin-top: 12px; }
+  .sk-img { aspect-ratio: 1181 / 1748; border-radius: var(--r-lg); }
+
+  /* ── 放大檢視 ─────────────────────────────────────────── */
+  dialog#viewer {
+    border: 0; padding: 0; margin: 0;
+    width: 100%; height: 100%;
+    max-width: none; max-height: none;
+    background: transparent;
+  }
+  dialog#viewer::backdrop { background: rgba(15, 17, 21, .88); }
+  .vbox {
+    height: 100%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 16px;
+    padding: max(20px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom));
+  }
+  #vimg { max-width: 100%; max-height: calc(100dvh - 130px); object-fit: contain; border-radius: 8px; background: #fff; }
+  .vbar { display: flex; gap: 10px; }
+  .vbar .btn { width: auto; min-height: 46px; padding: 0 22px; }
+  .vbar .btn-ghost { background: rgba(255, 255, 255, .14); color: #fff; }
+  .vbar .btn-ghost:hover { background: rgba(255, 255, 255, .22); }
+
+  /* ── 提示 ─────────────────────────────────────────────── */
+  #toast {
+    position: fixed;
+    left: 50%; bottom: calc(24px + env(safe-area-inset-bottom));
+    transform: translate(-50%, 12px);
+    max-width: calc(100% - 32px);
+    padding: 12px 18px;
+    background: var(--ink); color: #fff;
+    font-size: 14px;
+    border-radius: 999px;
+    opacity: 0; pointer-events: none;
+    transition: opacity .2s, transform .2s;
+    z-index: 10;
+  }
+  #toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sk { animation: none; }
+    * { transition-duration: .01ms !important; }
   }
 </style>
 </head>
 <body>
-<canvas id="bg" aria-hidden="true"></canvas>
-<main>
-  <header><div class="site" id="site">拍貼取件</div></header>
-  <div id="app">
-    <div class="card center"><div class="spinner" role="status" aria-label="載入中"></div></div>
+<header class="top">
+  <div class="wrap bar">
+    <span class="brand" id="brand">拍貼取件</span>
+    <span class="chip" id="chip" hidden></span>
   </div>
-  <noscript><div class="card center">這個頁面需要開啟 JavaScript 才能顯示照片。</div></noscript>
-</main>
+</header>
+
+<main class="wrap" id="app"></main>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<dialog id="viewer" aria-label="放大檢視">
+  <div class="vbox" id="vbox">
+    <img id="vimg" alt="">
+    <div class="vbar">
+      <a class="btn btn-primary" id="vdl" download>下載</a>
+      <button class="btn btn-ghost" id="vclose" type="button">關閉</button>
+    </div>
+  </div>
+</dialog>
+
+<noscript><p style="padding:24px;text-align:center">這個頁面需要開啟 JavaScript 才能顯示照片。</p></noscript>
 
 <!-- 一定要用絕對路徑：這個頁面會被 /p/編號 這種網址載入，
      相對路徑會被解析成 /p/config.js 而拿到錯的東西 -->
 <script src="/config.js"></script>
-<script src="/bg.js" defer></script>
 <script>
 (function () {
   'use strict';
 
-  var cfg = Object.assign({
+  const cfg = Object.assign({
     SITE_TITLE: '拍貼取件',
     READY_TEXT: '今晚 8 點前上線',
     PHOTO_BASE: '/data',
   }, window.SCAN_CONFIG || {});
 
-  var app = document.getElementById('app');
-  var base = String(cfg.PHOTO_BASE).replace(/\/+$/, '');
+  const $ = (id) => document.getElementById(id);
+  const app = $('app');
+  const base = String(cfg.PHOTO_BASE).replace(/\/+$/, '');
 
   document.title = cfg.SITE_TITLE;
-  document.getElementById('site').textContent = cfg.SITE_TITLE;
+  $('brand').textContent = cfg.SITE_TITLE;
 
-  // 只用 textContent 塞資料，不用 innerHTML 拼接使用者可控的內容
+  // ── 小工具 ───────────────────────────────────────────────
+  // 資料一律用 textContent 塞，不用 innerHTML 拼接任何外來字串
   function el(tag, cls, text) {
-    var n = document.createElement(tag);
+    const n = document.createElement(tag);
     if (cls) n.className = cls;
     if (text != null) n.textContent = text;
     return n;
   }
 
-  function show() {
-    document.body.classList.remove('home');
-    app.replaceChildren.apply(app, arguments);
+  // 圖示只有這裡的常數字串會進 innerHTML
+  const ICONS = {
+    download: '<path d="M12 4v11m0 0l-4-4m4 4l4-4M5 19h14"/>',
+    share: '<path d="M12 15V4m0 0L8 8m4-4l4 4M6 12v6a2 2 0 002 2h8a2 2 0 002-2v-6"/>',
+    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    wifiOff: '<path d="M3 3l18 18"/><path d="M8.5 16.4a5 5 0 017 0"/><path d="M5 12.9a10 10 0 015.2-2.7"/><path d="M19 12.9a10 10 0 00-2.9-1.9"/><path d="M2 8.8a15 15 0 014.2-2.6"/><path d="M12 20h.01"/>',
+    alert: '<circle cx="12" cy="12" r="9"/><path d="M12 8v5m0 3.5h.01"/>',
+    qr: '<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><path d="M14 14h2v2h-2zM18 14h2M14 18h2v2m2-2h2v2"/>',
+    refresh: '<path d="M20 11a8 8 0 10-2.3 5.7M20 5v6h-6"/>',
+    archive: '<path d="M4 7h16v3H4zM6 10v8a1 1 0 001 1h10a1 1 0 001-1v-8M10 14h4"/>',
+  };
+  function icon(name) {
+    const s = document.createElement('span');
+    s.className = 'ico';
+    s.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" ' +
+      'stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' + ICONS[name] + '</svg>';
+    return s;
   }
 
-  // ---- 取件編號 ----------------------------------------------------------
-  // QR 內容是大寫（為了縮小 QR），但客人手動改網址或舊連結可能是小寫，
-  // 一律轉大寫。編號字母表不含 I L O 0 1，所以大小寫轉換不會有歧義。
+  function button(cls, label, iconName) {
+    const b = el('button', 'btn ' + cls);
+    b.type = 'button';
+    if (iconName) b.appendChild(icon(iconName));
+    b.appendChild(el('span', null, label));
+    return b;
+  }
+  const setLabel = (b, text) => { b.lastChild.textContent = text; };
+
+  let toastTimer = 0;
+  function toast(msg) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+  }
+
+  const hhmm = () => new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false });
+
+  function setChip(id) {
+    const c = $('chip');
+    c.hidden = !id;
+    c.textContent = id ? '編號 ' + id : '';
+  }
+
+  // 換畫面：清空、放新內容、把焦點移到標題（螢幕閱讀器才知道畫面變了）
+  function show(wide, ...nodes) {
+    document.body.classList.toggle('wide', !!wide);
+    app.replaceChildren(...nodes);
+    const h = app.querySelector('h1');
+    if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); }
+    window.scrollTo(0, 0);
+  }
+
+  // ── 取件編號 ─────────────────────────────────────────────
+  // QR 內容是大寫（為了縮小 QR），但手動改網址或舊連結可能是小寫，一律轉大寫。
+  // 編號字母表不含 I L O 0 1，所以大小寫轉換不會有歧義。
   function readId() {
-    var raw = '';
-    var parts = location.pathname.split('/').filter(Boolean);
+    let raw = '';
+    const parts = location.pathname.split('/').filter(Boolean);
     try {
       if (parts.length >= 2 && parts[0].toLowerCase() === 'p') raw = decodeURIComponent(parts[1]);
       else raw = new URLSearchParams(location.search).get('id') || '';
     } catch (e) { raw = ''; }
     return raw.trim().toUpperCase();
   }
-  var ID_OK = /^[A-Z0-9]{3,12}$/;   // 也順便擋掉路徑跳脫（../ 之類）
-  var SAFE_NAME = /^[^\/\\]+$/;      // manifest 裡的檔名不能帶路徑
+  const ID_OK = /^[A-Z0-9]{3,12}$/;   // 也順便擋掉路徑跳脫（../ 之類）
+  const SAFE_NAME = /^[^\/\\]+$/;      // manifest 裡的檔名不能帶路徑
 
-  // ---- 各種畫面 ----------------------------------------------------------
+  // ── 置中型畫面共用骨架 ───────────────────────────────────
+  function stateView(iconName, title, lead) {
+    const w = el('div', 'state');
+    const b = el('div', 'badge');
+    b.appendChild(icon(iconName));
+    w.appendChild(b);
+    w.appendChild(el('h1', null, title));
+    if (lead) w.appendChild(el('p', 'lead', lead));
+    return w;
+  }
+
+  // ── 各畫面 ───────────────────────────────────────────────
+  function viewLoading() {
+    const head = el('div');
+    head.appendChild(el('div', 'sk sk-title'));
+    head.appendChild(el('div', 'sk sk-line'));
+    const w = el('div', 'ready');
+    w.appendChild(el('div', 'sk sk-img'));
+    w.appendChild(head);
+    w.setAttribute('aria-busy', 'true');
+    show(true, w);
+  }
+
   // 沒帶編號：直接開網域的人。這不是錯誤，是歡迎畫面。
   function viewHome() {
-    var w = el('div', 'hero');
-    w.appendChild(el('h1', null, cfg.SITE_TITLE));
-    w.appendChild(el('p', 'lead', '掃描照片上的 QR Code，就能下載你的拍貼與原始照片'));
-    show(w);
-    document.body.classList.add('home');
+    show(false, stateView('qr', cfg.SITE_TITLE, '掃描照片上的 QR Code，就能下載你的拍貼與原始照片。'));
   }
 
+  // 編號格式不對：不發任何請求
   function viewInvalid() {
-    var c = el('div', 'card center');
-    c.appendChild(el('div', 'emoji', '🔍'));
-    c.appendChild(el('h1', null, '找不到取件編號'));
-    c.appendChild(el('p', 'muted', '請重新掃描照片上的 QR Code。'));
-    show(c);
+    show(false, stateView('alert', '找不到取件編號', '這個網址不是有效的取件連結。請重新掃描照片上的 QR Code。'));
   }
 
+  // 照片還沒上傳（manifest 404）
   function viewPending(id) {
-    var c = el('div', 'card center');
-    c.appendChild(el('div', 'emoji', '📸'));
-    c.appendChild(el('div', 'big', cfg.READY_TEXT));
-    c.appendChild(el('p', null, '你的照片還在整理中，晚點回來看就會有了。'));
-    var p = el('p', 'muted', '取件編號 ');
-    p.appendChild(el('code', 'id', id));
-    c.appendChild(p);
-    c.appendChild(el('p', 'muted', '把這個網址存起來，或到時候再掃一次 QR Code 就可以。'));
-    var b = el('button', 'btn', '重新檢查');
-    b.type = 'button';
-    b.onclick = start;
-    c.appendChild(b);
-    show(c);
+    const w = stateView('clock', cfg.READY_TEXT, '你的照片還在整理中。上線之後回到這個頁面重新檢查，就能看到了。');
+    const btn = button('btn-primary', '重新檢查', 'refresh');
+    const status = el('p', 'small status', '檢查時間　' + hhmm());
+    status.id = 'status';
+    btn.onclick = () => recheck(id, btn, status);
+    w.appendChild(btn);
+    w.appendChild(status);
+    show(false, w);
   }
 
-  function viewError() {
-    var c = el('div', 'card center');
-    c.appendChild(el('div', 'emoji', '📶'));
-    c.appendChild(el('h1', null, '連線不太順'));
-    c.appendChild(el('p', 'muted', '網路好像不穩，請再試一次。'));
-    var b = el('button', 'btn primary', '重新載入');
-    b.type = 'button';
-    b.onclick = start;
-    c.appendChild(b);
-    show(c);
+  // 重新檢查：還沒上線就留在原畫面並說明，不然按了像是沒反應
+  function recheck(id, btn, status) {
+    btn.setAttribute('aria-busy', 'true');
+    setLabel(btn, '檢查中…');
+    load(id).then((r) => {
+      if (r.state === 'pending') {
+        btn.removeAttribute('aria-busy');
+        setLabel(btn, '重新檢查');
+        status.textContent = '還沒有照片　·　檢查時間　' + hhmm();
+        toast('還沒有照片，晚點再試一次');
+      } else {
+        route(id, r);
+      }
+    });
   }
 
+  // 連線失敗（跟「還沒上線」分開，不會誤報）
+  function viewError(id) {
+    const w = stateView('wifiOff', '連線不太順', '請確認網路連線後再試一次。');
+    const btn = button('btn-primary', '重新載入', 'refresh');
+    btn.onclick = start;
+    w.appendChild(btn);
+    show(false, w);
+  }
+
+  // 照片已上線
   function viewReady(id, m) {
-    var nodes = [];
-    var dir = base + '/' + encodeURIComponent(id) + '/';
+    const dir = base + '/' + encodeURIComponent(id) + '/';
+    const urlOf = (name) => dir + encodeURIComponent(name);
 
-    var top = el('div', 'card');
-    top.appendChild(el('h1', null, '你的拍貼好了'));
-    top.appendChild(el('p', 'muted', '取件編號 ' + id));
+    const root = el('div', 'ready');
+    const side = el('div', 'side');
 
+    // 左：成品圖
     if (m.composite && SAFE_NAME.test(m.composite)) {
-      var url = dir + encodeURIComponent(m.composite);
-      var img = el('img', 'composite');
-      img.src = url;
-      img.alt = '拍貼成品';
-      top.appendChild(img);
+      const src = urlOf(m.composite);
+      const stage = el('div', 'stage');
+      const ib = el('button', 'imgbtn');
+      ib.type = 'button';
+      ib.setAttribute('aria-label', '放大檢視拍貼成品');
+      ib.appendChild(fadeImg(src, '拍貼成品', 'strip'));
+      ib.onclick = () => openViewer(src, m.composite);
+      stage.appendChild(ib);
+      root.appendChild(stage);
 
-      var a = el('a', 'btn primary', '下載拍貼圖');
-      a.href = url;
-      a.setAttribute('download', m.composite);
-      top.appendChild(a);
+      // 右：標題與主要動作
+      const head = el('div');
+      head.appendChild(el('h1', null, '你的拍貼好了'));
+      head.appendChild(el('p', 'lead', '點圖片可以放大。手機長按圖片，就能直接存到相簿。'));
+      side.appendChild(head);
+
+      const actions = el('div', 'actions');
+      const dl = el('a', 'btn btn-primary');
+      dl.href = src;
+      dl.setAttribute('download', m.composite);
+      dl.appendChild(icon('download'));
+      dl.appendChild(el('span', null, '下載拍貼圖'));
+      dl.addEventListener('click', () => toast('開始下載'));
+      actions.appendChild(dl);
+
+      // 手機的分享面板可以直接「儲存影像」到相簿，比下載到檔案 App 順手；
+      // 不支援的瀏覽器（多數桌機）不顯示這顆，不放一顆按了沒用的按鈕。
+      if (canShareFiles()) {
+        const sh = button('btn-secondary', '存到相簿或分享', 'share');
+        sh.onclick = () => shareFile(sh, src, m.composite);
+        actions.appendChild(sh);
+      }
+      side.appendChild(actions);
+    } else {
+      const head = el('div');
+      head.appendChild(el('h1', null, '你的照片好了'));
+      side.appendChild(head);
+      root.appendChild(side);
     }
-    nodes.push(top);
 
-    var photos = Array.isArray(m.photos) ? m.photos.filter(function (n) {
-      return typeof n === 'string' && SAFE_NAME.test(n);
-    }) : [];
+    // 原始照片
+    const photos = (Array.isArray(m.photos) ? m.photos : [])
+      .filter((n) => typeof n === 'string' && SAFE_NAME.test(n));
 
     if (photos.length) {
-      var box = el('div', 'card');
-      box.appendChild(el('h2', null, '原始照片（' + photos.length + ' 張）'));
-      var grid = el('div', 'grid');
-      photos.forEach(function (name, i) {
-        var u = dir + encodeURIComponent(name);
-        var fig = el('figure');
-        var im = el('img');
-        im.src = u;
-        im.alt = '原始照片 ' + (i + 1);
-        im.loading = 'lazy';
-        fig.appendChild(im);
-        var dl = el('a', 'btn small', '下載');
-        dl.href = u;
-        dl.setAttribute('download', name);
-        fig.appendChild(dl);
-        grid.appendChild(fig);
+      const box = el('section', 'originals');
+      const row = el('div', 'row');
+      const h = el('h2', null, '原始照片');
+      h.appendChild(el('span', 'count', String(photos.length)));
+      row.appendChild(h);
+
+      if (photos.length > 1) {
+        const zip = el('button', 'link', '全部下載');
+        zip.type = 'button';
+        zip.onclick = () => downloadZip(zip, id, photos.map((n) => ({ name: n, url: urlOf(n) })));
+        row.appendChild(zip);
+      }
+      box.appendChild(row);
+
+      const grid = el('div', 'grid');
+      photos.forEach((name, i) => {
+        const url = urlOf(name);
+        const tile = el('div', 'tile');
+
+        const ib = el('button', 'imgbtn');
+        ib.type = 'button';
+        ib.setAttribute('aria-label', '放大檢視照片 ' + (i + 1));
+        const img = fadeImg(url, '原始照片 ' + (i + 1));
+        img.loading = 'lazy';
+        ib.appendChild(img);
+        ib.onclick = () => openViewer(url, name);
+        tile.appendChild(ib);
+
+        const cap = el('div', 'cap');
+        cap.appendChild(el('span', null, '照片 ' + (i + 1)));
+        const d = el('a', 'dl');
+        d.href = url;
+        d.setAttribute('download', name);
+        d.setAttribute('aria-label', '下載照片 ' + (i + 1));
+        d.appendChild(icon('download'));
+        cap.appendChild(d);
+        tile.appendChild(cap);
+        grid.appendChild(tile);
       });
       box.appendChild(grid);
-      nodes.push(box);
+      side.appendChild(box);
     }
 
-    nodes.push(el('p', 'tip', 'iPhone 如果按下載沒有直接存到相簿：長按圖片，選「加入照片」就可以了。'));
-    show.apply(null, nodes);
+    root.appendChild(side);
+    show(true, root);
   }
 
-  // ---- 載入 ------------------------------------------------------------
+  // 圖片載入完才淡入，不會看到一半的圖；載入失敗給個明確的提示
+  function fadeImg(src, alt, cls) {
+    const img = el('img', cls || '');
+    img.alt = alt;
+    img.decoding = 'async';
+    img.setAttribute('data-fade', '');
+    img.onload = () => img.classList.add('loaded');
+    img.onerror = () => { img.classList.add('loaded'); img.alt = alt + '（載入失敗）'; };
+    img.src = src;
+    return img;
+  }
+
+  // ── 放大檢視 ─────────────────────────────────────────────
+  const dlg = $('viewer');
+  function openViewer(url, name) {
+    if (!dlg.showModal) { window.open(url, '_blank', 'noopener'); return; }   // 很舊的瀏覽器
+    $('vimg').src = url;
+    $('vimg').alt = name;
+    $('vdl').href = url;
+    $('vdl').setAttribute('download', name);
+    dlg.showModal();
+  }
+  // 用按鈕或點背景關閉時直接清掉圖；按 Esc 關閉時靠 close 事件清
+  const closeViewer = () => { if (dlg.open) dlg.close(); $('vimg').removeAttribute('src'); };
+  $('vclose').onclick = closeViewer;
+  $('vbox').addEventListener('click', (e) => { if (e.target === $('vbox')) closeViewer(); });
+  dlg.addEventListener('close', () => $('vimg').removeAttribute('src'));
+
+  // ── 分享（存到相簿）──────────────────────────────────────
+  function canShareFiles() {
+    try {
+      return !!(navigator.share && navigator.canShare &&
+        navigator.canShare({ files: [new File(['x'], 'a.png', { type: 'image/png' })] }));
+    } catch (e) { return false; }
+  }
+
+  async function shareFile(btn, url, name) {
+    btn.setAttribute('aria-busy', 'true');
+    setLabel(btn, '準備中…');
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('http ' + res.status);
+      const blob = await res.blob();
+      const file = new File([blob], name, { type: blob.type || 'image/jpeg' });
+      if (navigator.canShare({ files: [file] })) await navigator.share({ files: [file] });
+      else saveBlob(blob, name);
+    } catch (e) {
+      // 使用者自己關掉分享面板不算錯誤
+      if (!e || e.name !== 'AbortError') toast('無法開啟分享，請改用下載');
+    } finally {
+      btn.removeAttribute('aria-busy');
+      setLabel(btn, '存到相簿或分享');
+    }
+  }
+
+  function saveBlob(blob, name) {
+    const u = URL.createObjectURL(blob);
+    const a = el('a');
+    a.href = u;
+    a.setAttribute('download', name);
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(u), 30000);
+  }
+
+  // ── 全部下載（打包成 zip）────────────────────────────────
+  // 不引入任何套件：只做「不壓縮」的 zip（JPEG 本來就壓縮過了，再壓沒有意義），
+  // 格式很單純，幾十行就能寫對。
+  const CRC_TABLE = (() => {
+    const t = new Uint32Array(256);
+    for (let n = 0; n < 256; n++) {
+      let c = n;
+      for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+      t[n] = c >>> 0;
+    }
+    return t;
+  })();
+  function crc32(buf) {
+    let c = 0xffffffff;
+    for (let i = 0; i < buf.length; i++) c = CRC_TABLE[(c ^ buf[i]) & 0xff] ^ (c >>> 8);
+    return (c ^ 0xffffffff) >>> 0;
+  }
+
+  function makeZip(files) {
+    const enc = new TextEncoder();
+    const d = new Date();
+    const time = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1);
+    const date = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+
+    const parts = [], central = [];
+    let offset = 0;
+
+    for (const f of files) {
+      const name = enc.encode(f.name);
+      const crc = crc32(f.data);
+      const size = f.data.length;
+
+      const lh = new DataView(new ArrayBuffer(30));
+      lh.setUint32(0, 0x04034b50, true);
+      lh.setUint16(4, 20, true);
+      lh.setUint16(6, 0x0800, true);       // 檔名為 UTF-8
+      lh.setUint16(8, 0, true);            // 不壓縮
+      lh.setUint16(10, time, true);
+      lh.setUint16(12, date, true);
+      lh.setUint32(14, crc, true);
+      lh.setUint32(18, size, true);
+      lh.setUint32(22, size, true);
+      lh.setUint16(26, name.length, true);
+      lh.setUint16(28, 0, true);
+      parts.push(lh.buffer, name, f.data);
+
+      const ch = new DataView(new ArrayBuffer(46));
+      ch.setUint32(0, 0x02014b50, true);
+      ch.setUint16(4, 20, true);
+      ch.setUint16(6, 20, true);
+      ch.setUint16(8, 0x0800, true);
+      ch.setUint16(10, 0, true);
+      ch.setUint16(12, time, true);
+      ch.setUint16(14, date, true);
+      ch.setUint32(16, crc, true);
+      ch.setUint32(20, size, true);
+      ch.setUint32(24, size, true);
+      ch.setUint16(28, name.length, true);
+      ch.setUint32(42, offset, true);
+      central.push(ch.buffer, name);
+
+      offset += 30 + name.length + size;
+    }
+
+    let centralSize = 0;
+    for (const p of central) centralSize += p.byteLength;
+
+    const end = new DataView(new ArrayBuffer(22));
+    end.setUint32(0, 0x06054b50, true);
+    end.setUint16(8, files.length, true);
+    end.setUint16(10, files.length, true);
+    end.setUint32(12, centralSize, true);
+    end.setUint32(16, offset, true);
+
+    return new Blob([...parts, ...central, end.buffer], { type: 'application/zip' });
+  }
+
+  async function downloadZip(btn, id, items) {
+    btn.disabled = true;
+    const original = btn.textContent;
+    try {
+      const files = [];
+      for (let i = 0; i < items.length; i++) {
+        btn.textContent = '打包中 ' + (i + 1) + '/' + items.length;
+        const res = await fetch(items[i].url);
+        if (!res.ok) throw new Error('http ' + res.status);
+        files.push({ name: items[i].name, data: new Uint8Array(await res.arrayBuffer()) });
+      }
+      saveBlob(makeZip(files), '拍貼原檔_' + id + '.zip');
+      toast('開始下載');
+    } catch (e) {
+      toast('打包失敗，請改用單張下載');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = original;
+    }
+  }
+
+  // ── 載入 ─────────────────────────────────────────────────
   // 404 = 還沒上線（正常狀況）；連線失敗 = 網路問題。兩者要分開，
   // 不然照片還沒傳的時候客人會看到「網路錯誤」而不是「今晚上線」。
   function load(id) {
-    var ctl = new AbortController();
-    var timer = setTimeout(function () { ctl.abort(); }, 12000);
-    var url = base + '/' + encodeURIComponent(id) + '/manifest.json';
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), 12000);
+    const url = base + '/' + encodeURIComponent(id) + '/manifest.json';
 
     return fetch(url, { cache: 'no-store', signal: ctl.signal })
-      .then(function (res) {
+      .then((res) => {
         if (res.status === 404) return { state: 'pending' };
         if (!res.ok) return { state: 'error' };
         return res.json().then(
-          function (m) { return { state: 'ready', m: m }; },
+          (m) => ({ state: 'ready', m }),
           // 拿到的不是 JSON（例如主機把不存在的路徑導回首頁）：當作還沒上線
-          function () { return { state: 'pending' }; }
+          () => ({ state: 'pending' })
         );
       })
-      .catch(function () { return { state: 'error' }; })
-      .then(function (r) { clearTimeout(timer); return r; });
+      .catch(() => ({ state: 'error' }))
+      .then((r) => { clearTimeout(timer); return r; });
+  }
+
+  function route(id, r) {
+    if (r.state === 'ready') viewReady(id, r.m);
+    else if (r.state === 'pending') viewPending(id);
+    else viewError(id);
   }
 
   function start() {
-    var id = readId();
-    if (!id) { viewHome(); return; }
-    if (!ID_OK.test(id)) { viewInvalid(); return; }
+    const id = readId();
+    if (!id) { setChip(''); viewHome(); return; }
+    if (!ID_OK.test(id)) { setChip(''); viewInvalid(); return; }
 
-    var c = el('div', 'card center');
-    c.appendChild(el('div', 'spinner'));
-    show(c);
-
-    load(id).then(function (r) {
-      if (r.state === 'ready') viewReady(id, r.m);
-      else if (r.state === 'pending') viewPending(id);
-      else viewError();
-    });
+    setChip(id);
+    viewLoading();
+    load(id).then((r) => route(id, r));
   }
 
   start();

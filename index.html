@@ -6,48 +6,55 @@
 <!-- 照片裡是活動來賓，不希望被搜尋引擎收錄 -->
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
-<meta name="color-scheme" content="light dark">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#05060a">
 <title>拍貼取件</title>
 <style>
   :root {
-    --bg: #f5f2ec;
-    --card: #ffffff;
-    --ink: #1f1d1a;
-    --muted: #7a746b;
-    --line: #e4dfd5;
-    --accent: #d4532a;
-    --accent-ink: #ffffff;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #151412;
-      --card: #201e1b;
-      --ink: #f1ede6;
-      --muted: #9a938a;
-      --line: #35312c;
-      --accent: #ec6b3f;
-      --accent-ink: #1a0f0a;
-    }
+    --bg: #05060a;
+    --card: rgba(14, 15, 24, .62);
+    --ink: #f2f3f8;
+    --muted: #9ea3b5;
+    --line: rgba(255, 255, 255, .12);
+    --a1: #4d7dff;
+    --a2: #9a63ff;
   }
   * { box-sizing: border-box; }
-  html { -webkit-text-size-adjust: 100%; }
+  html { -webkit-text-size-adjust: 100%; background: var(--bg); }
   body {
     margin: 0;
-    background: var(--bg);
     color: var(--ink);
     font: 16px/1.6 "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
     min-height: 100vh;
     min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
     padding: max(20px, env(safe-area-inset-top)) 16px max(28px, env(safe-area-inset-bottom));
   }
-  main { max-width: 480px; margin: 0 auto; }
-  header { text-align: center; padding: 8px 0 20px; }
-  header .site { font-size: 13px; letter-spacing: .18em; color: var(--muted); }
 
+  /* 粒子背景：固定在最底層，不擋任何點擊 */
+  #bg {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  /* margin:auto 讓內容少的時候垂直置中、多的時候從上面開始排 */
+  main { width: 100%; max-width: 480px; margin: auto; }
+  header { text-align: center; padding: 8px 0 20px; }
+  header .site { font-size: 13px; letter-spacing: .2em; color: var(--muted); }
+  body.home header { visibility: hidden; }
+
+  /* 玻璃卡片：半透明加模糊，粒子在後面流動但字仍然讀得清楚 */
   .card {
     background: var(--card);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    backdrop-filter: blur(16px) saturate(140%);
     border: 1px solid var(--line);
-    border-radius: 16px;
+    border-radius: 18px;
     padding: 24px 20px;
     margin-bottom: 16px;
   }
@@ -60,12 +67,45 @@
   .emoji { font-size: 44px; line-height: 1; margin-bottom: 8px; }
   code.id {
     display: inline-block;
-    background: var(--bg);
+    background: rgba(255, 255, 255, .08);
     border: 1px solid var(--line);
     border-radius: 6px;
     padding: 1px 10px;
     font: 600 15px/1.7 ui-monospace, "SF Mono", Consolas, monospace;
     letter-spacing: .12em;
+  }
+
+  /* 首頁（沒帶編號）：直接把字放在粒子上，不包卡片 */
+  .hero { text-align: center; padding: 4vh 4px; position: relative; }
+  /* 文字後面墊一層柔和的暗色暈，粒子再亮也不會蓋到字。
+     z-index:-1 落在畫布之上（畫布在 DOM 裡比較前面），內容之下。 */
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: -40px -70px;
+    z-index: -1;
+    background: radial-gradient(ellipse at center,
+      rgba(5, 6, 10, .82) 0%, rgba(5, 6, 10, .6) 42%, rgba(5, 6, 10, 0) 72%);
+    pointer-events: none;
+  }
+  .hero h1 {
+    font-size: clamp(38px, 11vw, 60px);
+    font-weight: 700;
+    letter-spacing: .04em;
+    margin: 0 0 16px;
+    background: linear-gradient(90deg, #9cc0ff, #c69cff 55%, #ff9db3);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+  .hero .lead {
+    font-size: 17px;
+    max-width: 22em;
+    margin: 0 auto;
+    text-wrap: balance;
+    color: rgba(242, 243, 248, .86);
+    text-shadow: 0 1px 14px rgba(0, 0, 0, .8);
   }
 
   .btn {
@@ -77,7 +117,7 @@
     padding: 0 20px;
     border: 1px solid var(--line);
     border-radius: 12px;
-    background: var(--card);
+    background: rgba(255, 255, 255, .06);
     color: var(--ink);
     font: inherit;
     font-weight: 600;
@@ -86,7 +126,11 @@
     width: 100%;
     -webkit-tap-highlight-color: transparent;
   }
-  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .btn.primary {
+    background: linear-gradient(135deg, var(--a1), var(--a2));
+    border-color: transparent;
+    color: #fff;
+  }
   .btn:active { transform: scale(.98); }
   .btn.small { min-height: 40px; font-size: 14px; border-radius: 10px; }
 
@@ -97,7 +141,7 @@
     border-radius: 10px;
     border: 1px solid var(--line);
     margin: 16px 0;
-    background: var(--bg);
+    background: rgba(255, 255, 255, .04);
   }
   .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .grid figure { margin: 0; }
@@ -109,12 +153,12 @@
     border-radius: 8px;
     border: 1px solid var(--line);
     margin-bottom: 8px;
-    background: var(--bg);
+    background: rgba(255, 255, 255, .04);
   }
   .tip {
     font-size: 13px;
     color: var(--muted);
-    background: var(--bg);
+    background: rgba(255, 255, 255, .06);
     border-radius: 10px;
     padding: 10px 12px;
     margin: 0;
@@ -122,16 +166,22 @@
   .spinner {
     width: 28px; height: 28px;
     border: 3px solid var(--line);
-    border-top-color: var(--accent);
+    border-top-color: var(--a1);
     border-radius: 50%;
     margin: 12px auto;
     animation: spin .8s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
   @media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 3s; } }
+
+  /* 不支援 backdrop-filter 的瀏覽器：卡片改成幾乎不透明，不然字會疊在粒子上看不清 */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .card { background: rgba(14, 15, 24, .92); }
+  }
 </style>
 </head>
 <body>
+<canvas id="bg" aria-hidden="true"></canvas>
 <main>
   <header><div class="site" id="site">拍貼取件</div></header>
   <div id="app">
@@ -143,6 +193,7 @@
 <!-- 一定要用絕對路徑：這個頁面會被 /p/編號 這種網址載入，
      相對路徑會被解析成 /p/config.js 而拿到錯的東西 -->
 <script src="/config.js"></script>
+<script src="/bg.js" defer></script>
 <script>
 (function () {
   'use strict';
@@ -168,6 +219,7 @@
   }
 
   function show() {
+    document.body.classList.remove('home');
     app.replaceChildren.apply(app, arguments);
   }
 
@@ -187,6 +239,15 @@
   var SAFE_NAME = /^[^\/\\]+$/;      // manifest 裡的檔名不能帶路徑
 
   // ---- 各種畫面 ----------------------------------------------------------
+  // 沒帶編號：直接開網域的人。這不是錯誤，是歡迎畫面。
+  function viewHome() {
+    var w = el('div', 'hero');
+    w.appendChild(el('h1', null, cfg.SITE_TITLE));
+    w.appendChild(el('p', 'lead', '掃描照片上的 QR Code，就能下載你的拍貼與原始照片'));
+    show(w);
+    document.body.classList.add('home');
+  }
+
   function viewInvalid() {
     var c = el('div', 'card center');
     c.appendChild(el('div', 'emoji', '🔍'));
@@ -211,7 +272,7 @@
     show(c);
   }
 
-  function viewError(id) {
+  function viewError() {
     var c = el('div', 'card center');
     c.appendChild(el('div', 'emoji', '📶'));
     c.appendChild(el('h1', null, '連線不太順'));
@@ -299,6 +360,7 @@
 
   function start() {
     var id = readId();
+    if (!id) { viewHome(); return; }
     if (!ID_OK.test(id)) { viewInvalid(); return; }
 
     var c = el('div', 'card center');
@@ -308,7 +370,7 @@
     load(id).then(function (r) {
       if (r.state === 'ready') viewReady(id, r.m);
       else if (r.state === 'pending') viewPending(id);
-      else viewError(id);
+      else viewError();
     });
   }
 

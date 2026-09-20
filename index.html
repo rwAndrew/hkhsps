@@ -281,6 +281,8 @@
     SITE_TITLE: '拍貼取件',
     READY_TEXT: '今晚 8 點前上線',
     PHOTO_BASE: '/data',
+    EXPIRED: false,
+    EXPIRED_TEXT: '照片已經到期刪除',
   }, window.SCAN_CONFIG || {});
 
   const $ = (id) => document.getElementById(id);
@@ -429,6 +431,13 @@
     });
   }
 
+  // 照片已經過了保留期限、被刪除了。config.js 的 EXPIRED 設成 true 就會顯示這個，
+  // 不然「今晚 8 點前上線」在照片刪掉之後就是一句錯的話。
+  function viewExpired() {
+    show(false, stateView('archive', cfg.EXPIRED_TEXT,
+      '為了保護隱私，照片只保留一段時間。現在已經全部刪除，無法再取回。'));
+  }
+
   // 連線失敗（跟「還沒上線」分開，不會誤報）
   function viewError(id) {
     const w = stateView('wifiOff', '連線不太順', '請確認網路連線後再試一次。');
@@ -466,11 +475,11 @@
 
       const actions = el('div', 'actions');
       const dl = el('a', 'btn btn-primary');
-      dl.href = src;
-      dl.setAttribute('download', m.composite);
+      bindDownload(dl, src, m.composite);
       dl.appendChild(icon('download'));
       dl.appendChild(el('span', null, '下載拍貼圖'));
-      dl.addEventListener('click', () => toast('開始下載'));
+      // 跨網站時由 downloadFile 自己跳提示，這裡只處理同網站的
+      dl.addEventListener('click', () => { if (!isCrossOrigin(src)) toast('開始下載'); });
       actions.appendChild(dl);
 
       // 手機的分享面板可以直接「儲存影像」到相簿，比下載到檔案 App 順手；
@@ -524,8 +533,7 @@
         const cap = el('div', 'cap');
         cap.appendChild(el('span', null, '照片 ' + (i + 1)));
         const d = el('a', 'dl');
-        d.href = url;
-        d.setAttribute('download', name);
+        bindDownload(d, url, name);
         d.setAttribute('aria-label', '下載照片 ' + (i + 1));
         d.appendChild(icon('download'));
         cap.appendChild(d);
@@ -563,6 +571,10 @@
     dlg.showModal();
   }
   // 用按鈕或點背景關閉時直接清掉圖；按 Esc 關閉時靠 close 事件清
+  $('vdl').addEventListener('click', (e) => {
+    const a = $('vdl');
+    if (isCrossOrigin(a.href)) { e.preventDefault(); downloadFile(a.href, a.getAttribute('download')); }
+  });
   const closeViewer = () => { if (dlg.open) dlg.close(); $('vimg').removeAttribute('src'); };
   $('vclose').onclick = closeViewer;
   $('vbox').addEventListener('click', (e) => { if (e.target === $('vbox')) closeViewer(); });
@@ -593,6 +605,35 @@
       btn.removeAttribute('aria-busy');
       setLabel(btn, '存到相簿或分享');
     }
+  }
+
+  // ── 下載 ────────────────────────────────────────────────
+  // 照片放在另一個網站時，瀏覽器會無視 <a download>，直接跳過去開那張圖，
+  // 看起來就是「下載鈕變成開新分頁」。所以跨網站時攔下點擊，自己抓成檔案再存
+  // （這需要對方網站有設 CORS，匯出工具產生的 vercel.json 已經設好）。
+  // 抓不到就退回開新分頁，至少客人還能長按儲存。
+  const isCrossOrigin = (url) => {
+    try { return new URL(url, location.href).origin !== location.origin; } catch (e) { return false; }
+  };
+
+  async function downloadFile(url, name) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('http ' + res.status);
+      saveBlob(await res.blob(), name);
+      toast('開始下載');
+    } catch (e) {
+      window.open(url, '_blank', 'noopener');
+      toast('已在新分頁開啟，長按圖片可以儲存');
+    }
+  }
+
+  function bindDownload(a, url, name) {
+    a.href = url;
+    a.setAttribute('download', name);
+    a.addEventListener('click', (e) => {
+      if (isCrossOrigin(url)) { e.preventDefault(); downloadFile(url, name); }
+    });
   }
 
   function saveBlob(blob, name) {
@@ -722,13 +763,27 @@
           () => ({ state: 'pending' })
         );
       })
-      .catch(() => ({ state: 'error' }))
+      .catch(() => probe(url))
+      .then((r) => { clearTimeout(timer); return r; });
+  }
+
+  // fetch 失敗有兩種可能：
+  //   (1) 真的連不上（沒網路）
+  //   (2) 照片放在另一個網站，對方回了 404 卻沒帶 CORS 標頭 ——
+  //       瀏覽器不讓我們看那個回應，一律當成失敗。
+  // 用 no-cors 再試一次：能拿到回應（即使是看不到內容的「不透明回應」）就代表
+  // 伺服器活著，那就是 (2)，也就是「還沒上傳」，不是網路問題。
+  function probe(url) {
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), 8000);
+    return fetch(url, { mode: 'no-cors', cache: 'no-store', signal: ctl.signal })
+      .then(() => ({ state: 'pending' }), () => ({ state: 'error' }))
       .then((r) => { clearTimeout(timer); return r; });
   }
 
   function route(id, r) {
     if (r.state === 'ready') viewReady(id, r.m);
-    else if (r.state === 'pending') viewPending(id);
+    else if (r.state === 'pending') (cfg.EXPIRED ? viewExpired() : viewPending(id));
     else viewError(id);
   }
 

@@ -7,19 +7,20 @@
 ## 運作方式
 
 ```
-QR 內容:  HTTPS://HKHSPS.VERCEL.APP/P/95CA6      （大寫，為了讓 QR 更小）
+QR 內容:  HTTPS://HKHSPS.VERCEL.APP/P/K7WHMX3B      （大寫，為了讓 QR 更小）
               │
               ▼
 vercel.json 把 /p/編號 導到 index.html
               │
               ▼
-index.html 讀 <PHOTO_BASE>/95CA6/manifest.json
-              ├─ 404       → 顯示「今晚 8 點前上線」
+index.html 讀 <PHOTO_BASE>/K7WHMX3B/manifest.json
+              ├─ 404       → 顯示「今晚 8 點前上線」（EXPIRED 時顯示「已到期刪除」）
               ├─ 連線失敗   → 顯示「連線不太順」＋重試
               └─ 有資料     → 顯示成品圖與原始照片，可下載
 ```
 
-編號一律轉大寫處理，`/p/95ca6` 和 `/P/95CA6` 是同一個。
+編號一律轉大寫處理，`/p/k7whmx3b` 和 `/P/K7WHMX3B` 是同一個。
+編號是 8 碼，字母表不含 I L O 0 1（約 8.5×10¹¹ 種組合）。
 
 ## 檔案
 
@@ -71,14 +72,44 @@ data/
 - **`manifest.json` 最後才上傳。** 頁面以它存不存在判斷「上線了沒」，
   所以它先於照片出現的話，客人會看到破圖。
 
-## ⚠️ 照片不要放進 git
+## 架構：頁面和照片是兩個獨立的 Vercel 專案
 
-這個 repo 只放網頁程式。`.gitignore` 已經擋掉 `data/` 和所有圖片檔，
-就算之後把 repo 改成公開，來賓的照片也不會跟著公開。
+```
+專案 A  hkhsps          只有網頁程式（這個 repo）。長期保留，QR 指向這裡。
+專案 B  hkhsps-photos   只有照片。從本機上傳，保留期限一到就整個刪掉。
+```
 
-照片量很大（一組成品圖約 3 MB，加上原檔約 30 MB，200 組約 7 GB），
-放外部儲存空間比較合適，把 `config.js` 的 `PHOTO_BASE` 改成那邊的網址即可。
-外部空間需要設定 CORS，允許 `https://hkhsps.vercel.app` 讀取。
+為什麼要分開：
+
+- **刪照片＝刪專案 B**，一個動作乾淨，頁面完全不用動。
+- **專案 A 不要刪。** 刪掉之後 `hkhsps.vercel.app` 這個網址很可能會被釋放
+  （我沒查證 Vercel 的實際規則），別人就有機會註冊它，
+  讓所有掃舊 QR 的人看到他想給的東西。留著這個只有網頁程式的專案沒有任何隱私風險。
+- 照片不進 git：`.gitignore` 擋掉了 `data/` 和所有圖片，就算 repo 改公開也不會外洩。
+
+專案 B 由主系統的 `匯出上線.bat` 產生（縮小、清 EXIF、產生 `vercel.json`），
+用 `vercel deploy --prod` 上傳。因為跟頁面不同網站，它的 `vercel.json` 有設 CORS，
+只允許 `https://hkhsps.vercel.app` 讀取。
+
+上傳完成後：
+
+1. 把 `config.js` 的 `PHOTO_BASE` 改成 `https://<專案B網址>/data`，推上 GitHub
+2. 在主系統資料夾執行 `node export-web.js --check https://<專案B網址>`，
+   確認網址通、CORS 對、照片看得到
+3. 手機實掃一張 QR 做最後確認
+
+## 保留期限到了之後
+
+1. 到 Vercel 刪掉專案 B（照片就消失了）
+2. 把 `config.js` 的 `EXPIRED` 改成 `true`，推上 GitHub
+   （客人掃 QR 會看到「照片已經到期刪除」，而不是永遠等不到的「今晚上線」）
+3. **不要刪專案 A**，理由見上面
+
+## 頁面怎麼判斷「還沒上傳」
+
+照片在另一個網站時，`fetch` 遇到 404 又沒帶 CORS 標頭，瀏覽器只會回報「失敗」，
+跟真的斷網長得一樣。頁面遇到失敗時會再用 `no-cors` 探測一次：
+連得上就是「還沒上傳」，連不上才是「網路有問題」。
 
 ## 部署到 Vercel
 
@@ -94,7 +125,9 @@ data/
 
 ## 上線前檢查
 
+- [x] 大寫路徑 `/P/XXXXXXXX`（QR 實際會用的形式）會到頁面，不是 Vercel 的 404
 - [ ] 手機掃一張測試 QR，確認會到這個頁面
-- [ ] 隨便放一組假資料，確認會顯示照片與下載按鈕
-- [ ] 刪掉假資料，確認回到「今晚 8 點前上線」
-- [ ] 用小寫網址 `/p/abcde` 和大寫 `/P/ABCDE` 各開一次
+- [ ] 上傳一組真的資料，確認會顯示照片，且「下載」「全部下載」都有反應
+- [ ] `node export-web.js --check https://<專案B網址>` 全部通過
+- [ ] 用一個不存在的編號開，確認顯示「今晚 8 點前上線」而不是「連線不太順」
+- [ ] iPhone 與 Android 各測一次「存到相簿或分享」

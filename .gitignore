@@ -1,0 +1,10 @@
+# 來賓照片絕對不進 git —— 這個 repo 只放網頁程式。
+# 就算之後設成公開，照片也不會跟著公開。
+data/
+*.jpg
+*.jpeg
+*.png
+!favicon.png
+
+node_modules/
+.vercel/

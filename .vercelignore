@@ -1,0 +1,5 @@
+# 有這個檔案時，Vercel CLI 不會再套用 .gitignore。
+# 這樣活動後可以用 `vercel deploy` 從本機把 data/ 一起上傳，
+# 但照片仍然不會進 GitHub。
+node_modules/
+.git/

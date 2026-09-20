@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- 照片裡是活動來賓，不希望被搜尋引擎收錄 -->
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="color-scheme" content="light dark">
+<title>拍貼取件</title>
+<style>
+  :root {
+    --bg: #f5f2ec;
+    --card: #ffffff;
+    --ink: #1f1d1a;
+    --muted: #7a746b;
+    --line: #e4dfd5;
+    --accent: #d4532a;
+    --accent-ink: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #151412;
+      --card: #201e1b;
+      --ink: #f1ede6;
+      --muted: #9a938a;
+      --line: #35312c;
+      --accent: #ec6b3f;
+      --accent-ink: #1a0f0a;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.6 "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding: max(20px, env(safe-area-inset-top)) 16px max(28px, env(safe-area-inset-bottom));
+  }
+  main { max-width: 480px; margin: 0 auto; }
+  header { text-align: center; padding: 8px 0 20px; }
+  header .site { font-size: 13px; letter-spacing: .18em; color: var(--muted); }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 24px 20px;
+    margin-bottom: 16px;
+  }
+  .center { text-align: center; }
+  h1 { font-size: 22px; line-height: 1.35; margin: 0 0 6px; }
+  h2 { font-size: 15px; margin: 0 0 12px; color: var(--muted); font-weight: 600; }
+  p { margin: 0 0 12px; }
+  .muted { color: var(--muted); font-size: 14px; }
+  .big { font-size: 30px; font-weight: 700; margin: 14px 0 10px; }
+  .emoji { font-size: 44px; line-height: 1; margin-bottom: 8px; }
+  code.id {
+    display: inline-block;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 1px 10px;
+    font: 600 15px/1.7 ui-monospace, "SF Mono", Consolas, monospace;
+    letter-spacing: .12em;
+  }
+
+  .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 50px;
+    padding: 0 20px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--card);
+    color: var(--ink);
+    font: inherit;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    width: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .btn:active { transform: scale(.98); }
+  .btn.small { min-height: 40px; font-size: 14px; border-radius: 10px; }
+
+  .composite {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    margin: 16px 0;
+    background: var(--bg);
+  }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid figure { margin: 0; }
+  .grid img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    margin-bottom: 8px;
+    background: var(--bg);
+  }
+  .tip {
+    font-size: 13px;
+    color: var(--muted);
+    background: var(--bg);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin: 0;
+  }
+  .spinner {
+    width: 28px; height: 28px;
+    border: 3px solid var(--line);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    margin: 12px auto;
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 3s; } }
+</style>
+</head>
+<body>
+<main>
+  <header><div class="site" id="site">拍貼取件</div></header>
+  <div id="app">
+    <div class="card center"><div class="spinner" role="status" aria-label="載入中"></div></div>
+  </div>
+  <noscript><div class="card center">這個頁面需要開啟 JavaScript 才能顯示照片。</div></noscript>
+</main>
+
+<!-- 一定要用絕對路徑：這個頁面會被 /p/編號 這種網址載入，
+     相對路徑會被解析成 /p/config.js 而拿到錯的東西 -->
+<script src="/config.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var cfg = Object.assign({
+    SITE_TITLE: '拍貼取件',
+    READY_TEXT: '今晚 8 點前上線',
+    PHOTO_BASE: '/data',
+  }, window.SCAN_CONFIG || {});
+
+  var app = document.getElementById('app');
+  var base = String(cfg.PHOTO_BASE).replace(/\/+$/, '');
+
+  document.title = cfg.SITE_TITLE;
+  document.getElementById('site').textContent = cfg.SITE_TITLE;
+
+  // 只用 textContent 塞資料，不用 innerHTML 拼接使用者可控的內容
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+
+  function show() {
+    app.replaceChildren.apply(app, arguments);
+  }
+
+  // ---- 取件編號 ----------------------------------------------------------
+  // QR 內容是大寫（為了縮小 QR），但客人手動改網址或舊連結可能是小寫，
+  // 一律轉大寫。編號字母表不含 I L O 0 1，所以大小寫轉換不會有歧義。
+  function readId() {
+    var raw = '';
+    var parts = location.pathname.split('/').filter(Boolean);
+    try {
+      if (parts.length >= 2 && parts[0].toLowerCase() === 'p') raw = decodeURIComponent(parts[1]);
+      else raw = new URLSearchParams(location.search).get('id') || '';
+    } catch (e) { raw = ''; }
+    return raw.trim().toUpperCase();
+  }
+  var ID_OK = /^[A-Z0-9]{3,12}$/;   // 也順便擋掉路徑跳脫（../ 之類）
+  var SAFE_NAME = /^[^\/\\]+$/;      // manifest 裡的檔名不能帶路徑
+
+  // ---- 各種畫面 ----------------------------------------------------------
+  function viewInvalid() {
+    var c = el('div', 'card center');
+    c.appendChild(el('div', 'emoji', '🔍'));
+    c.appendChild(el('h1', null, '找不到取件編號'));
+    c.appendChild(el('p', 'muted', '請重新掃描照片上的 QR Code。'));
+    show(c);
+  }
+
+  function viewPending(id) {
+    var c = el('div', 'card center');
+    c.appendChild(el('div', 'emoji', '📸'));
+    c.appendChild(el('div', 'big', cfg.READY_TEXT));
+    c.appendChild(el('p', null, '你的照片還在整理中，晚點回來看就會有了。'));
+    var p = el('p', 'muted', '取件編號 ');
+    p.appendChild(el('code', 'id', id));
+    c.appendChild(p);
+    c.appendChild(el('p', 'muted', '把這個網址存起來，或到時候再掃一次 QR Code 就可以。'));
+    var b = el('button', 'btn', '重新檢查');
+    b.type = 'button';
+    b.onclick = start;
+    c.appendChild(b);
+    show(c);
+  }
+
+  function viewError(id) {
+    var c = el('div', 'card center');
+    c.appendChild(el('div', 'emoji', '📶'));
+    c.appendChild(el('h1', null, '連線不太順'));
+    c.appendChild(el('p', 'muted', '網路好像不穩，請再試一次。'));
+    var b = el('button', 'btn primary', '重新載入');
+    b.type = 'button';
+    b.onclick = start;
+    c.appendChild(b);
+    show(c);
+  }
+
+  function viewReady(id, m) {
+    var nodes = [];
+    var dir = base + '/' + encodeURIComponent(id) + '/';
+
+    var top = el('div', 'card');
+    top.appendChild(el('h1', null, '你的拍貼好了'));
+    top.appendChild(el('p', 'muted', '取件編號 ' + id));
+
+    if (m.composite && SAFE_NAME.test(m.composite)) {
+      var url = dir + encodeURIComponent(m.composite);
+      var img = el('img', 'composite');
+      img.src = url;
+      img.alt = '拍貼成品';
+      top.appendChild(img);
+
+      var a = el('a', 'btn primary', '下載拍貼圖');
+      a.href = url;
+      a.setAttribute('download', m.composite);
+      top.appendChild(a);
+    }
+    nodes.push(top);
+
+    var photos = Array.isArray(m.photos) ? m.photos.filter(function (n) {
+      return typeof n === 'string' && SAFE_NAME.test(n);
+    }) : [];
+
+    if (photos.length) {
+      var box = el('div', 'card');
+      box.appendChild(el('h2', null, '原始照片（' + photos.length + ' 張）'));
+      var grid = el('div', 'grid');
+      photos.forEach(function (name, i) {
+        var u = dir + encodeURIComponent(name);
+        var fig = el('figure');
+        var im = el('img');
+        im.src = u;
+        im.alt = '原始照片 ' + (i + 1);
+        im.loading = 'lazy';
+        fig.appendChild(im);
+        var dl = el('a', 'btn small', '下載');
+        dl.href = u;
+        dl.setAttribute('download', name);
+        fig.appendChild(dl);
+        grid.appendChild(fig);
+      });
+      box.appendChild(grid);
+      nodes.push(box);
+    }
+
+    nodes.push(el('p', 'tip', 'iPhone 如果按下載沒有直接存到相簿：長按圖片，選「加入照片」就可以了。'));
+    show.apply(null, nodes);
+  }
+
+  // ---- 載入 ------------------------------------------------------------
+  // 404 = 還沒上線（正常狀況）；連線失敗 = 網路問題。兩者要分開，
+  // 不然照片還沒傳的時候客人會看到「網路錯誤」而不是「今晚上線」。
+  function load(id) {
+    var ctl = new AbortController();
+    var timer = setTimeout(function () { ctl.abort(); }, 12000);
+    var url = base + '/' + encodeURIComponent(id) + '/manifest.json';
+
+    return fetch(url, { cache: 'no-store', signal: ctl.signal })
+      .then(function (res) {
+        if (res.status === 404) return { state: 'pending' };
+        if (!res.ok) return { state: 'error' };
+        return res.json().then(
+          function (m) { return { state: 'ready', m: m }; },
+          // 拿到的不是 JSON（例如主機把不存在的路徑導回首頁）：當作還沒上線
+          function () { return { state: 'pending' }; }
+        );
+      })
+      .catch(function () { return { state: 'error' }; })
+      .then(function (r) { clearTimeout(timer); return r; });
+  }
+
+  function start() {
+    var id = readId();
+    if (!ID_OK.test(id)) { viewInvalid(); return; }
+
+    var c = el('div', 'card center');
+    c.appendChild(el('div', 'spinner'));
+    show(c);
+
+    load(id).then(function (r) {
+      if (r.state === 'ready') viewReady(id, r.m);
+      else if (r.state === 'pending') viewPending(id);
+      else viewError(id);
+    });
+  }
+
+  start();
+})();
+</script>
+</body>
+</html>

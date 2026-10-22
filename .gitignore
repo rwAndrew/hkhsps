@@ -13,3 +13,6 @@ data/
 紀錄.csv
 
 node_modules/
+
+# .nojekyll 必須進 git —— 它告訴 GitHub Pages 不要用 Jekyll 處理這個站
+!.nojekyll

@@ -1,10 +1,15 @@
 # 來賓照片絕對不進 git —— 這個 repo 只放網頁程式。
-# 就算之後設成公開，照片也不會跟著公開。
+# 這個 repo 必須是公開的（GitHub Pages 免費方案不支援私人 repo），
+# 所以這道防線特別重要。
 data/
 *.jpg
 *.jpeg
 *.png
+*.enc
 !favicon.png
 
+# 金鑰：弄丟等於照片解不開，外洩等於加密白做
+金鑰.txt
+紀錄.csv
+
 node_modules/
-.vercel/

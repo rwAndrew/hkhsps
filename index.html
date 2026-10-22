@@ -270,9 +270,10 @@
 
 <noscript><p style="padding:24px;text-align:center">這個頁面需要開啟 JavaScript 才能顯示照片。</p></noscript>
 
-<!-- 一定要用絕對路徑：這個頁面會被 /p/編號 這種網址載入，
-     相對路徑會被解析成 /p/config.js 而拿到錯的東西 -->
-<script src="/config.js"></script>
+<!-- 用相對路徑：GitHub Pages 的專案站掛在 /<repo>/ 底下，
+     寫成 /config.js 會指到網域根目錄而 404。
+     編號改放在網址的 # 之後，所以路徑永遠是 /<repo>/，相對路徑不會跑掉。 -->
+<script src="config.js"></script>
 <script>
 (function () {
   'use strict';
@@ -311,6 +312,7 @@
     qr: '<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><path d="M14 14h2v2h-2zM18 14h2M14 18h2v2m2-2h2v2"/>',
     refresh: '<path d="M20 11a8 8 0 10-2.3 5.7M20 5v6h-6"/>',
     archive: '<path d="M4 7h16v3H4zM6 10v8a1 1 0 001 1h10a1 1 0 001-1v-8M10 14h4"/>',
+    lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/>',
   };
   function icon(name) {
     const s = document.createElement('span');
@@ -355,19 +357,31 @@
     window.scrollTo(0, 0);
   }
 
-  // ── 取件編號 ─────────────────────────────────────────────
-  // QR 內容是大寫（為了縮小 QR），但手動改網址或舊連結可能是小寫，一律轉大寫。
-  // 編號字母表不含 I L O 0 1，所以大小寫轉換不會有歧義。
-  function readId() {
+  // ── 取件編號與金鑰 ───────────────────────────────────────
+  // QR 的網址長這樣： https://…/hkhsps/#K7WHMX3B.金鑰
+  //
+  // 金鑰放在 # 之後是刻意的：瀏覽器「不會」把 # 後面的內容送給伺服器，
+  // 所以 GitHub 的日誌裡永遠不會出現任何一組金鑰。
+  // 照片放在公開的 repo，靠的就是這把金鑰 —— 沒有它，下載到的只是亂碼。
+  function readTicket() {
     let raw = '';
-    const parts = location.pathname.split('/').filter(Boolean);
     try {
-      if (parts.length >= 2 && parts[0].toLowerCase() === 'p') raw = decodeURIComponent(parts[1]);
-      else raw = new URLSearchParams(location.search).get('id') || '';
+      const h = location.hash.replace(/^#/, '');
+      if (h) raw = decodeURIComponent(h);
+      else {
+        const parts = location.pathname.split('/').filter(Boolean);
+        // 舊的 /p/編號 網址（Vercel 時期）仍然認得
+        if (parts.length >= 2 && parts[parts.length - 2].toLowerCase() === 'p') {
+          raw = decodeURIComponent(parts[parts.length - 1]);
+        } else raw = new URLSearchParams(location.search).get('id') || '';
+      }
     } catch (e) { raw = ''; }
-    return raw.trim().toUpperCase();
+
+    const [id, key] = raw.trim().split('.');
+    return { id: (id || '').toUpperCase(), key: (key || '').toUpperCase() };
   }
   const ID_OK = /^[A-Z0-9]{3,12}$/;   // 也順便擋掉路徑跳脫（../ 之類）
+  const KEY_OK = /^[A-Z2-7]{10,40}$/;
   const SAFE_NAME = /^[^\/\\]+$/;      // manifest 裡的檔名不能帶路徑
 
   // ── 置中型畫面共用骨架 ───────────────────────────────────
@@ -404,19 +418,19 @@
   }
 
   // 照片還沒上傳（manifest 404）
-  function viewPending(id) {
+  function viewPending(id, key) {
     const w = stateView('clock', cfg.READY_TEXT, '你的照片還在整理中。上線之後回到這個頁面重新檢查，就能看到了。');
     const btn = button('btn-primary', '重新檢查', 'refresh');
     const status = el('p', 'small status', '檢查時間　' + hhmm());
     status.id = 'status';
-    btn.onclick = () => recheck(id, btn, status);
+    btn.onclick = () => recheck(id, key, btn, status);
     w.appendChild(btn);
     w.appendChild(status);
     show(false, w);
   }
 
   // 重新檢查：還沒上線就留在原畫面並說明，不然按了像是沒反應
-  function recheck(id, btn, status) {
+  function recheck(id, key, btn, status) {
     btn.setAttribute('aria-busy', 'true');
     setLabel(btn, '檢查中…');
     load(id).then((r) => {
@@ -426,7 +440,7 @@
         status.textContent = '還沒有照片　·　檢查時間　' + hhmm();
         toast('還沒有照片，晚點再試一次');
       } else {
-        route(id, r);
+        route(id, key, r);
       }
     });
   }
@@ -448,9 +462,10 @@
   }
 
   // 照片已上線
-  function viewReady(id, m) {
+  // urls：已解密的 blob 網址對照表；沒加密時傳 null，直接用原網址
+  function viewReady(id, m, urls) {
     const dir = base + '/' + encodeURIComponent(id) + '/';
-    const urlOf = (name) => dir + encodeURIComponent(name);
+    const urlOf = (name) => (urls ? urls[name] : dir + encodeURIComponent(name));
 
     const root = el('div', 'ready');
     const side = el('div', 'side');
@@ -463,7 +478,7 @@
       ib.type = 'button';
       ib.setAttribute('aria-label', '放大檢視拍貼成品');
       ib.appendChild(fadeImg(src, '拍貼成品', 'strip'));
-      ib.onclick = () => openViewer(src, m.composite);
+      ib.onclick = () => openViewer(src, niceName(m.composite));
       stage.appendChild(ib);
       root.appendChild(stage);
 
@@ -475,7 +490,7 @@
 
       const actions = el('div', 'actions');
       const dl = el('a', 'btn btn-primary');
-      bindDownload(dl, src, m.composite);
+      bindDownload(dl, src, niceName(m.composite));
       dl.appendChild(icon('download'));
       dl.appendChild(el('span', null, '下載拍貼圖'));
       // 跨網站時由 downloadFile 自己跳提示，這裡只處理同網站的
@@ -486,7 +501,7 @@
       // 不支援的瀏覽器（多數桌機）不顯示這顆，不放一顆按了沒用的按鈕。
       if (canShareFiles()) {
         const sh = button('btn-secondary', '存到相簿或分享', 'share');
-        sh.onclick = () => shareFile(sh, src, m.composite);
+        sh.onclick = () => shareFile(sh, src, niceName(m.composite));
         actions.appendChild(sh);
       }
       side.appendChild(actions);
@@ -511,7 +526,7 @@
       if (photos.length > 1) {
         const zip = el('button', 'link', '全部下載');
         zip.type = 'button';
-        zip.onclick = () => downloadZip(zip, id, photos.map((n) => ({ name: n, url: urlOf(n) })));
+        zip.onclick = () => downloadZip(zip, id, photos.map((n) => ({ name: niceName(n), url: urlOf(n) })));
         row.appendChild(zip);
       }
       box.appendChild(row);
@@ -527,13 +542,13 @@
         const img = fadeImg(url, '原始照片 ' + (i + 1));
         img.loading = 'lazy';
         ib.appendChild(img);
-        ib.onclick = () => openViewer(url, name);
+        ib.onclick = () => openViewer(url, niceName(name));
         tile.appendChild(ib);
 
         const cap = el('div', 'cap');
         cap.appendChild(el('span', null, '照片 ' + (i + 1)));
         const d = el('a', 'dl');
-        bindDownload(d, url, name);
+        bindDownload(d, url, niceName(name));
         d.setAttribute('aria-label', '下載照片 ' + (i + 1));
         d.appendChild(icon('download'));
         cap.appendChild(d);
@@ -745,6 +760,57 @@
     }
   }
 
+  // ── 解密 ─────────────────────────────────────────────────
+  // 照片放在公開的 GitHub repo，所以每個檔案都是用 AES-128-GCM 加密過的。
+  // 金鑰來自網址 # 之後的那段，伺服器從頭到尾看不到。
+  //
+  // 檔案格式： [12 bytes IV][密文 + 16 bytes 驗證標籤]
+  // 金鑰推導： SHA-256(金鑰:編號) 取前 16 bytes
+  //            （加上編號當鹽，而且瀏覽器端不必實作 base32 解碼）
+  const blobUrls = [];
+
+  async function importKey(secret, id) {
+    const bytes = new TextEncoder().encode(secret + ':' + id);
+    const hash = await crypto.subtle.digest('SHA-256', bytes);
+    return crypto.subtle.importKey('raw', hash.slice(0, 16), { name: 'AES-GCM' }, false, ['decrypt']);
+  }
+
+  async function decryptOne(key, buf, type) {
+    const plain = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv: buf.slice(0, 12) }, key, buf.slice(12));
+    const url = URL.createObjectURL(new Blob([plain], { type }));
+    blobUrls.push(url);
+    return url;
+  }
+
+  // 把這一組的所有檔案抓下來解密，回傳「檔名 → 可直接使用的網址」。
+  // 解密後的網址是 blob:，跟頁面同源，所以下載、分享、打包都能正常運作。
+  async function decryptAll(id, secret, m, onProgress) {
+    const key = await importKey(secret, id);
+    const dir = base + '/' + encodeURIComponent(id) + '/';
+    const names = [m.composite, ...(m.photos || [])].filter(
+      (n) => typeof n === 'string' && SAFE_NAME.test(n));
+    const map = {};
+
+    for (let i = 0; i < names.length; i++) {
+      onProgress(i, names.length);
+      const res = await fetch(dir + encodeURIComponent(names[i]), { cache: 'no-store' });
+      if (!res.ok) throw Object.assign(new Error('下載失敗'), { kind: 'net' });
+      const buf = await res.arrayBuffer();
+      try {
+        map[names[i]] = await decryptOne(key, buf, m.type || 'image/jpeg');
+      } catch (e) {
+        // AES-GCM 會驗證內容，解不開就是金鑰不對（網址被截斷）或檔案損壞
+        throw Object.assign(new Error('解密失敗'), { kind: 'key' });
+      }
+    }
+    onProgress(names.length, names.length);
+    return map;
+  }
+
+  // 下載時要給客人看得懂的檔名，不要是 1.enc
+  const niceName = (name) => String(name).replace(/\.enc$/i, '.jpg');
+
   // ── 載入 ─────────────────────────────────────────────────
   // 404 = 還沒上線（正常狀況）；連線失敗 = 網路問題。兩者要分開，
   // 不然照片還沒傳的時候客人會看到「網路錯誤」而不是「今晚上線」。
@@ -781,20 +847,58 @@
       .then((r) => { clearTimeout(timer); return r; });
   }
 
-  function route(id, r) {
-    if (r.state === 'ready') viewReady(id, r.m);
-    else if (r.state === 'pending') (cfg.EXPIRED ? viewExpired() : viewPending(id));
-    else viewError(id);
+  // 解密進度：檔案要整個下載完才能解，所以一定要有回饋
+  function viewDecrypting() {
+    const w = stateView('lock', '正在解鎖你的照片', '照片是加密保存的，需要先下載並解開。');
+    const p = el('p', 'small status', '準備中…');
+    p.id = 'decstat';
+    w.appendChild(p);
+    show(false, w);
+    return (i, n) => {
+      const el2 = $('decstat');
+      if (el2) el2.textContent = i >= n ? '快好了…' : `解鎖中　${i + 1} / ${n}`;
+    };
+  }
+
+  // 網址被截斷、或金鑰少打幾個字時會走到這裡
+  function viewBadKey() {
+    show(false, stateView('alert', '這個連結不完整',
+      '照片是加密的，需要完整的連結才能打開。請重新掃描照片上的 QR Code，不要手動輸入網址。'));
+  }
+
+  function viewNoCrypto() {
+    show(false, stateView('alert', '這個瀏覽器無法解鎖照片',
+      '請用 Chrome、Safari 或 Edge 開啟，並確認網址是 https 開頭。'));
+  }
+
+  async function route(id, key, r) {
+    if (r.state === 'pending') { (cfg.EXPIRED ? viewExpired() : viewPending(id, key)); return; }
+    if (r.state === 'error') { viewError(id); return; }
+
+    const m = r.m;
+    if (!m.enc) { viewReady(id, m, null); return; }     // 沒加密（本機測試用）
+
+    if (!key || !KEY_OK.test(key)) { viewBadKey(); return; }
+    if (!window.crypto || !crypto.subtle) { viewNoCrypto(); return; }
+
+    const onProgress = viewDecrypting();
+    try {
+      const urls = await decryptAll(id, key, m, onProgress);
+      viewReady(id, m, urls);
+    } catch (e) {
+      if (e && e.kind === 'key') viewBadKey();
+      else viewError(id);
+    }
   }
 
   function start() {
-    const id = readId();
+    const { id, key } = readTicket();
     if (!id) { setChip(''); viewHome(); return; }
     if (!ID_OK.test(id)) { setChip(''); viewInvalid(); return; }
 
     setChip(id);
     viewLoading();
-    load(id).then((r) => route(id, r));
+    load(id).then((r) => route(id, key, r));
   }
 
   start();

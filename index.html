@@ -605,7 +605,10 @@
 
   // 沒帶編號：直接開網域的人。這不是錯誤，是歡迎畫面。
   function viewHome() {
-    show(false, stateView('qr', cfg.SITE_TITLE, '掃描照片上的 QR Code，就能下載你的拍貼與原始照片。'));
+    const w = stateView('qr', cfg.SITE_TITLE, '掃描照片上的 QR Code，就能下載你的拍貼與原始照片。');
+    const fb = feedbackBlock();   // 活動前後都能填，不用等拿到照片
+    if (fb) w.appendChild(fb);
+    show(false, w);
   }
 
   // 編號格式不對：不發任何請求

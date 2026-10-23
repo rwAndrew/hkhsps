@@ -1,7 +1,8 @@
 // 掃描頁設定。改這裡就好，不用動 index.html。
 window.SCAN_CONFIG = {
-  // 頁面頂端的小標題
+  // 頁面頂端的標題，與標題上方的英文小標（留空字串就不顯示英文小標）
   SITE_TITLE: '拍貼取件',
+  SITE_EN: 'PHOTO STRIP',
 
   // 照片還沒上傳時顯示的大字
   READY_TEXT: '今晚 8 點前上線',

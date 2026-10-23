@@ -329,13 +329,12 @@
 
   /* ══ 首頁 ═════════════════════════════════════════════════
      逆向《微醺大飯店》首頁的手法，換成校慶拍貼的題材：
-       開場儀式   沙漏倒數 + 輪播提示  →  電影倒數片頭 3·2·1 + 輪播提示
-                 「喝下這杯，你會想起誰？」→「按下快門，你會想起誰？」
-                 酒倒下去，黑白世界變彩色 → 快門闔上、閃光，黑白照片顯影成彩色
-                 只演一次（sessionStorage），之後直接進站
+       開場儀式   沙漏倒數、舉杯、酒倒下去，黑白世界變彩色
+                 → 觀景窗對焦、快門闔上、閃光，黑白照片顯影成彩色（不用按，一秒就過）
+                 同一個分頁只演一次（sessionStorage）
        主視覺     劇院框 + 左右 TIPSY / SOBER 招牌 → 拱窗 + SMILE / CHEESE 招牌，裡面是兩條拍貼
-       故事段     夜空、飯店大樓、雲從兩側滑進來 → 夜空、校舍、雲滑進來、教室燈一格一格亮起
-       章節標題   大字中文 + ——◇ ENGLISH ◇——
+       故事段     夜空、飯店大樓、雲從兩側滑進來 → 夜空、小港高中，雲從校舍前往兩邊散開、教室燈一格一格亮起
+       章節標題   大字中文 + ——◇ ENGLISH ◇——（用在許願池）
        右下角常駐「預約入住」→「許願合照」
        信末署名   Yours Truly, 微醺大飯店全體人員 → Yours Truly, 港中攝影組 全體人員
      全部是 CSS / 原生 JS，沒有載入 GSAP 或任何外部檔案。 */
@@ -352,24 +351,7 @@
     animation: grain .5s steps(4) infinite; }
   @keyframes grain { 25% { transform: translate(-3%, 2%); } 50% { transform: translate(2%, -3%); }
                      75% { transform: translate(-2%, -1%); } }
-  .g-load, .g-ask { position: absolute; inset: 0; display: flex; flex-direction: column;
-                    align-items: center; justify-content: center; gap: 30px; padding: 24px; transition: opacity .6s; }
-  #gate[data-step="load"] .g-ask, #gate:not([data-step="load"]) .g-load,
-  #gate[data-step="snap"] .g-ask { opacity: 0; pointer-events: none; }
-  .leader { position: relative; width: min(56vw, 220px); aspect-ratio: 1; animation: flicker 3s infinite; }
-  .leader i { position: absolute; }
-  .leader .ring { inset: 0; border: 2px solid rgba(255, 231, 197, .78); border-radius: 50%; }
-  .leader .r2 { inset: 9%; border-width: 1px; opacity: .55; }
-  .leader .cross { inset: -16%;
-    background: linear-gradient(rgba(255, 231, 197, .4), rgba(255, 231, 197, .4)) center / 1px 100% no-repeat,
-                linear-gradient(rgba(255, 231, 197, .4), rgba(255, 231, 197, .4)) center / 100% 1px no-repeat; }
-  .leader .hand { left: calc(50% - 1px); top: 0; width: 2px; height: 50%; background: var(--cream);
-                  transform-origin: 50% 100%; animation: sweep .85s linear infinite; }
-  .leader .num { position: absolute; inset: 0; display: grid; place-items: center;
-                 font: 600 clamp(64px, 22vw, 96px)/1 var(--serif); color: var(--cream); }
-  @keyframes sweep { to { transform: rotate(360deg); } }
-  @keyframes flicker { 0%, 100% { opacity: 1; } 47% { opacity: .92; } 50% { opacity: .75; } 53% { opacity: .95; } }
-  .g-hint { min-height: 1.6em; font-size: 13px; letter-spacing: .22em; color: var(--muted); }
+  .g-aim { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; }
   .finder { position: relative; width: min(70vw, 280px); aspect-ratio: 4 / 3; }
   .finder .c { position: absolute; width: 26px; height: 26px; border: 2px solid var(--gold); }
   .finder .tl { top: 0; left: 0; border-right: 0; border-bottom: 0; }
@@ -377,24 +359,14 @@
   .finder .bl { bottom: 0; left: 0; border-right: 0; border-top: 0; }
   .finder .br { bottom: 0; right: 0; border-left: 0; border-top: 0; }
   .finder .focus { position: absolute; left: 50%; top: 50%; width: 30%; aspect-ratio: 1; translate: -50% -50%;
-                   border: 1px solid rgba(255, 231, 197, .55); border-radius: 50%; animation: focus 2.4s ease-in-out infinite; }
-  @keyframes focus { 50% { scale: .82; border-color: var(--gold); } }
+                   border: 1px solid rgba(255, 231, 197, .55); border-radius: 50%; animation: focus .8s ease-out forwards; }
+  @keyframes focus { from { scale: 1.6; opacity: .3; } 80% { scale: .92; } to { scale: 1; border-color: var(--gold); } }
   .finder .rec { position: absolute; top: 12px; left: 14px; font: 600 11px/1 var(--sans); letter-spacing: .2em; color: #ff6b5e; }
   .finder .rec::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 6px;
                          border-radius: 50%; background: #ff3b30; animation: blink 1s steps(2) infinite; }
   .finder .meta { position: absolute; right: 14px; bottom: 11px; font: 11px/1 ui-monospace, Consolas, monospace;
                   letter-spacing: .1em; color: var(--muted); }
   @keyframes blink { 50% { opacity: 0; } }
-  .g-q { font: 600 clamp(20px, 5.8vw, 26px)/1.6 var(--serif); letter-spacing: .12em; text-indent: .12em; }
-  .g-btn { padding: 13px 38px; border: 1px solid var(--gold); border-radius: 999px; cursor: pointer;
-           background: rgba(0, 0, 0, .45); color: var(--gold);
-           font: 600 15px/1 var(--serif); letter-spacing: .32em; text-indent: .32em;
-           animation: breathe 2.6s ease-in-out infinite; }
-  .g-btn:hover { background: rgba(204, 195, 141, .12); }
-  @keyframes breathe { 50% { box-shadow: 0 0 0 7px rgba(204, 195, 141, .08), 0 0 26px rgba(204, 195, 141, .25); } }
-  .gate-skip { position: absolute; z-index: 3; top: max(10px, env(safe-area-inset-top)); right: 10px;
-               padding: 10px 12px; border: 0; background: none; cursor: pointer;
-               font-size: 13px; letter-spacing: .24em; color: var(--muted); }
   .g-shutter { position: absolute; left: 0; right: 0; height: 50.5%; z-index: 2; background: #000;
                transform: scaleY(0); transition: transform .2s cubic-bezier(.6, 0, .4, 1); }
   .g-shutter.top { top: 0; transform-origin: top; }
@@ -483,17 +455,21 @@
   .night em, .wish em { font-style: normal; color: var(--gold); }
   .town { position: relative; margin: 12vh auto 0; width: min(100%, 520px); }
   .school { display: block; width: 100%; height: auto; overflow: visible; }
+  /* 窗戶等雲散開才亮 */
   .school .w { fill: #231d38; transition: fill .6s ease; }
-  .school.in .w { fill: var(--c); transition-delay: var(--wd); }
-  .school .glow { opacity: 0; transition: opacity 2s 1.2s; }
-  .school.in .glow { opacity: 1; }
-  .cloud { position: absolute; display: block; height: auto; opacity: .62;
-           transition: transform 2.6s cubic-bezier(.2, .7, .2, 1); }
-  .cloud.c1 { width: 46%; left: -14%; top: 4%; transform: translateX(-90vw); }
-  .cloud.c2 { width: 40%; right: -12%; top: 30%; transform: translateX(90vw) scaleX(-1); }
-  .cloud.c3 { width: 34%; left: -6%; top: 58%; transform: translateX(-90vw); }
-  .town.in .cloud.c1, .town.in .cloud.c3 { transform: none; }
-  .town.in .cloud.c2 { transform: scaleX(-1); }
+  .town.in .school .w { fill: var(--c); transition-delay: calc(1.3s + var(--wd)); }
+  .school .glow { opacity: 0; transition: opacity 2s 2s; }
+  .town.in .school .glow { opacity: 1; }
+  /* 雲：一開始整片蓋住校舍，捲到這裡時往左右散開，停在兩側 */
+  .cloud { position: absolute; z-index: 2; display: block; height: auto; pointer-events: none;
+           transition: transform 2.6s cubic-bezier(.25, .7, .2, 1); }
+  .cloud.c1 { width: 62%; left: -4%;  top: 2%;  --x: -76%; }
+  .cloud.c2 { width: 60%; right: -4%; top: 14%; --x: 76%; --f: -1; }
+  .cloud.c3 { width: 58%; left: 8%;   top: 40%; --x: -96%; }
+  .cloud.c4 { width: 60%; right: 4%;  top: 50%; --x: 94%;  --f: -1; }
+  .cloud { transform: scaleX(var(--f, 1)); }
+  .town.in .cloud { transform: translateX(var(--x)) scaleX(var(--f, 1)); }
+  .cloud.c3, .cloud.c4 { transition-delay: .15s; }
   .letter { margin-top: 10vh; }
   .letter p { margin-top: 18px; color: var(--muted); text-wrap: balance; }
   .formula { display: flex; justify-content: center; align-items: baseline; flex-wrap: wrap; gap: 6px 12px;
@@ -504,7 +480,7 @@
   .sign { font-family: var(--serif); line-height: 1.9; }
   .sign i { font-size: 18px; color: var(--gold); }
   .home-btns { display: flex; gap: 12px; justify-content: center; margin-top: 38px; }
-  .home-btns .btn { width: auto; flex: 1; max-width: 170px; min-height: 48px; border-radius: 999px; font-family: var(--serif); }
+  .home-btns .btn { width: auto; flex: 1; max-width: 220px; min-height: 48px; border-radius: 999px; font-family: var(--serif); }
 
   /* 章節標題：大字中文 + ——◇ ENGLISH ◇—— */
   .sec { padding: 14vh 0 4vh; text-align: center; }
@@ -515,31 +491,6 @@
                background: linear-gradient(var(--line-strong), var(--line-strong)) center / 100% 1px no-repeat; }
   .sec-h .en::before { text-align: left; }
   .sec-h .en::after { text-align: right; }
-
-  /* 怎麼玩：橫向滑動的票券 */
-  .cards { display: flex; gap: 16px; margin-top: 40px; padding: 6px 13% 10px; overflow-x: auto;
-           scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
-  .cards::-webkit-scrollbar { display: none; }
-  .card { flex: 0 0 74%; scroll-snap-align: center; position: relative; padding: 30px 22px 28px;
-          background: linear-gradient(160deg, var(--panel-2), var(--panel)); border: 1px solid var(--line-strong); border-radius: 6px;
-          box-shadow: inset 0 0 0 5px var(--panel), inset 0 0 0 6px var(--line);
-          -webkit-mask: radial-gradient(circle 10px at 50% 0, #0000 97%, #000) top / 100% 51% no-repeat,
-                        radial-gradient(circle 10px at 50% 100%, #0000 97%, #000) bottom / 100% 51% no-repeat;
-                  mask: radial-gradient(circle 10px at 50% 0, #0000 97%, #000) top / 100% 51% no-repeat,
-                        radial-gradient(circle 10px at 50% 100%, #0000 97%, #000) bottom / 100% 51% no-repeat; }
-  .card .no { font: 700 44px/1 var(--serif); color: transparent; -webkit-text-stroke: 1px var(--gold); opacity: .8; }
-  .card .ico { width: 34px; height: 34px; margin: 18px auto 0; color: var(--gold); }
-  .card h3 { margin: 14px 0 0; font: 700 26px/1.2 var(--serif); letter-spacing: .3em; text-indent: .3em; color: var(--cream); }
-  .card .en { margin-top: 6px; font: 600 11px/1 var(--sans); letter-spacing: .36em; text-indent: .36em; color: var(--gold); }
-  .card p { margin-top: 16px; font-size: 14px; color: var(--muted); text-wrap: balance; }
-  .dots { display: flex; justify-content: center; gap: 8px; margin-top: 14px; }
-  .dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--line-strong); transition: width .3s, background-color .3s; }
-  .dots i.on { width: 20px; border-radius: 3px; background: var(--gold); }
-  @media (min-width: 760px) {
-    .cards { max-width: 900px; margin-left: auto; margin-right: auto; padding: 6px 24px 10px; overflow: visible; }
-    .card { flex: 1; }
-    .dots { display: none; }
-  }
 
   /* 許願 */
   .wish .line { margin: 40px 0 28px; font: 600 clamp(22px, 6.4vw, 30px)/1.75 var(--serif); letter-spacing: .08em; text-wrap: balance; }
@@ -565,8 +516,9 @@
   @media (prefers-reduced-motion: reduce) {
     .reveal, .reveal.drop { opacity: 1; transform: none; transition: none; }
     .cloud { transition: none; }
+    .town.in .school .w { transition-delay: 0s; }
     .h-stage, .h-top { transform: none; opacity: 1; }
-    .cue svg, .h-sign, .h-arch::after, .night::before, .leader, .leader .hand, .g-btn, .finder .focus { animation: none; }
+    .cue svg, .h-sign, .h-arch::after, .night::before, .finder .focus { animation: none; }
     .sk, .step.now .dot, main > * { animation: none; }
     * { transition-duration: .01ms !important; }
   }
@@ -583,16 +535,9 @@
 </script>
 </head>
 <body>
-<div id="gate" role="dialog" aria-modal="true" aria-label="開場" data-step="load">
-  <button class="gate-skip" type="button">略過</button>
-  <div class="g-load">
-    <div class="leader" aria-hidden="true"><i class="cross"></i><i class="ring"></i><i class="ring r2"></i><i class="hand"></i><b class="num">3</b></div>
-    <p class="g-hint" aria-live="polite"></p>
-  </div>
-  <div class="g-ask">
-    <div class="finder" aria-hidden="true"><i class="c tl"></i><i class="c tr"></i><i class="c bl"></i><i class="c br"></i><i class="focus"></i><span class="rec">REC</span><span class="meta">F2.8 · 1/125 · ISO 800</span></div>
-    <p class="g-q"></p>
-    <button class="g-btn" type="button"></button>
+<div id="gate" aria-hidden="true">
+  <div class="g-aim">
+    <div class="finder"><i class="c tl"></i><i class="c tr"></i><i class="c bl"></i><i class="c br"></i><i class="focus"></i><span class="rec">REC</span><span class="meta">F2.8 · 1/125 · ISO 800</span></div>
   </div>
   <i class="g-shutter top"></i><i class="g-shutter bot"></i><i class="g-flash"></i>
 </div>
@@ -649,20 +594,12 @@
     title: '小港高中',
     subtitle: '校慶拍貼',
     signs: ['SMILE', 'CHEESE'],
-    gateQuestion: '按下快門，你會想起誰？',
-    gateButton: '按下快門',
-    hints: ['正在借一台相機…', '正在擦乾淨鏡頭…', '正在整理瀏海…', '正在等老師下課…', '正在找最好看的角度…'],
     t1: '走過這裡的人，\n都會想起一個人',
     t2: '你——\n會想起*哪位老師*？',
     story: ['校慶這天，攝影組把一台相機、兩台印表機，\n搬進了校園。', '和朋友擠進同一格，按下快門，\n拍貼當場印出來，一人一條帶回家。'],
     formula: [['3', '格畫面'], ['2', '條拍貼'], ['1', '個 QR Code']],
     motto: '願這一格，替你記得。',
     signature: '港中攝影組 全體人員',
-    steps: [
-      ['拍', 'SHOOT', 'camera', '站進框裡，三、二、一，\n連拍三張。'],
-      ['印', 'PRINT', 'printer', '當場印出兩條一模一樣的拍貼，\n一人一條。'],
-      ['掃', 'SCAN', 'qr', '掃拍貼上的 QR Code，\n下載原始照片。'],
-    ],
     ask: '如果只能選一位，\n你最想跟*哪位老師*合照？',
     askNote: '每一則願望，攝影組都會看到。',
     pickup: '已經拿到拍貼了？掃上面的 QR Code 就能取件。',
@@ -698,8 +635,6 @@
     archive: '<path d="M4 7h16v3H4zM6 10v8a1 1 0 001 1h10a1 1 0 001-1v-8M10 14h4"/>',
     chat: '<path d="M5 6h14a1 1 0 011 1v8a1 1 0 01-1 1h-7l-4 3v-3H5a1 1 0 01-1-1V7a1 1 0 011-1z"/>',
     lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/>',
-    camera: '<path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 011 1v9a1 1 0 01-1 1H4a1 1 0 01-1-1V9a1 1 0 011-1z"/><circle cx="12" cy="13" r="3.5"/>',
-    printer: '<path d="M7 9V4h10v5M7 17H5a1 1 0 01-1-1v-6a1 1 0 011-1h14a1 1 0 011 1v6a1 1 0 01-1 1h-2"/><path d="M7 14h10v6H7z"/>',
     sparkle: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.7 1.8 1.8.7-1.8.7L19 21l-.7-1.8-1.8-.7 1.8-.7z"/>',
   };
   function icon(name) {
@@ -933,44 +868,92 @@
     return st;
   }
 
-  // 校舍：中間鐘塔、兩翼三層教室。窗戶進畫面時一格一格亮起來。
+  // 小港高中：照學校官網的校園照片畫的。
+  //   中間較高的主樓、屋頂一排直立的鰭片；兩翼是每層都有走廊欄杆的教室；
+  //   左翼底下架空，有一道大拱（官網橫幅那道）；右翼前面是一排連續拱廊；前面有球形路燈和大樹。
+  // 窗戶在雲散開之後一格一格亮起來。
   function schoolSvg() {
     const LIT = ['#ffd98a', '#ffd98a', '#ffe7b0', '#ffcf6b', '#c79bff', '#8ff0bf', '#ff9cc2', '#93dcff'];
     let wins = '';
     let k = 0;
-    const win = (x, y, w, h) => {
-      const dark = Math.random() < 0.18;
-      const c = dark ? '#231d38' : LIT[Math.floor(Math.random() * LIT.length)];
-      wins += '<rect class="w" x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="1.5" style="--c:' + c +
-        ';--wd:' + (0.35 + (k++ % 7) * 0.12 + Math.random() * 0.5).toFixed(2) + 's"/>';
+    const win = (x, y, w, h, color) => {
+      const dark = !color && Math.random() < 0.18;
+      const c = color || (dark ? '#231d38' : LIT[Math.floor(Math.random() * LIT.length)]);
+      wins += '<rect class="w" x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="1" style="--c:' + c +
+        ';--wd:' + ((k++ % 9) * 0.1 + Math.random() * 0.5).toFixed(2) + 's"/>';
     };
-    [126, 158, 190].forEach((y) => {
-      [36, 58, 80, 102, 124].forEach((x) => win(x, y, 14, 18));
-      [222, 244, 266, 288, 310].forEach((x) => win(x, y, 14, 18));
+    // 兩翼：三層走廊，每層一排窗＋一條欄杆
+    let wings = '';
+    [[20, 150, 28], [214, 340, 222]].forEach(([x0, x1, wx]) => {
+      [112, 140, 168].forEach((y) => {
+        wings += '<rect x="' + x0 + '" y="' + (y + 3) + '" width="' + (x1 - x0) + '" height="17" fill="#3a3024"/>';
+        for (let x = wx; x + 10 <= x1 - 4; x += 16) win(x, y + 5, 10, 13);
+        wings += '<rect x="' + x0 + '" y="' + (y + 20) + '" width="' + (x1 - x0) + '" height="8" fill="url(#rail)"/>';
+        wings += '<rect x="' + x0 + '" y="' + y + '" width="' + (x1 - x0) + '" height="3" fill="#e8d6a2"/>';
+      });
     });
-    [122, 148, 174].forEach((y) => win(170, y, 20, 16));
-    return '<svg class="school" viewBox="0 0 360 250" role="img" aria-label="夜晚的校舍，教室的燈一格一格亮起">' +
+    // 主樓：四層，每層三扇窗
+    [100, 124, 148, 172].forEach((y) => [163, 177, 191].forEach((x) => win(x, y + 5, 10, 14)));
+    // 右翼一樓的連續拱廊
+    let arcade = '';
+    [222, 252, 282, 312].forEach((x) => {
+      arcade += '<path class="w" d="M' + x + ' 226V210a12 12 0 0124 0v16z" style="--c:#ffcf6b;--wd:' + (0.9 + Math.random() * 0.4).toFixed(2) + 's"/>';
+    });
+    // 屋頂鰭片
+    let fins = '';
+    for (let x = 153; x <= 208; x += 8) fins += '<rect x="' + x + '" y="38" width="3.2" height="14" fill="#e2cf98" stroke="#5c4d2e" stroke-width=".6"/>';
+    // 球形路燈
+    const lamp = (x) => '<path d="M' + x + ' 238V214" stroke="#d9cfb2" stroke-width="1.2"/>' +
+      '<circle cx="' + x + '" cy="212" r="7" fill="url(#lamp)"/><circle cx="' + x + '" cy="212" r="2.6" fill="#fff6d6"/>';
+    // 樹：一團一團的樹冠
+    const tree = (x, y, r, c) => '<path d="M' + x + ' ' + (y + r) + 'v' + (238 - y - r) + '" stroke="#2b2216" stroke-width="2.4"/>' +
+      '<circle cx="' + x + '" cy="' + y + '" r="' + r + '" fill="' + c + '"/>' +
+      '<circle cx="' + (x - r * 0.6) + '" cy="' + (y + r * 0.35) + '" r="' + (r * 0.7) + '" fill="' + c + '"/>' +
+      '<circle cx="' + (x + r * 0.65) + '" cy="' + (y + r * 0.3) + '" r="' + (r * 0.72) + '" fill="' + c + '"/>';
+
+    return '<svg class="school" viewBox="0 0 360 252" role="img" aria-label="夜晚的小港高中，雲散開後教室的燈一格一格亮起">' +
       '<defs><linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e2cf98"/><stop offset="1" stop-color="#8a7446"/></linearGradient>' +
       '<linearGradient id="wall2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0dfab"/><stop offset="1" stop-color="#9a8250"/></linearGradient>' +
+      '<pattern id="rail" width="4" height="8" patternUnits="userSpaceOnUse"><rect width="4" height="8" fill="#cdb880"/><rect x="1.5" width="1" height="8" fill="#6f5d38"/></pattern>' +
+      '<radialGradient id="lamp"><stop offset="0" stop-color="#fff2c0" stop-opacity=".9"/><stop offset="1" stop-color="#fff2c0" stop-opacity="0"/></radialGradient>' +
       '<radialGradient id="halo"><stop offset="0" stop-color="#ffe7b0" stop-opacity=".35"/><stop offset="1" stop-color="#ffe7b0" stop-opacity="0"/></radialGradient></defs>' +
-      '<ellipse class="glow" cx="180" cy="160" rx="200" ry="120" fill="url(#halo)"/>' +
-      '<ellipse cx="180" cy="233" rx="172" ry="15" fill="#120f22" stroke="#ccc38d" stroke-opacity=".45"/>' +
-      '<ellipse cx="180" cy="233" rx="150" ry="10" fill="none" stroke="#ccc38d" stroke-opacity=".25" stroke-dasharray="3 4"/>' +
-      '<rect x="24" y="112" width="312" height="116" fill="url(#wall)" stroke="#5c4d2e"/>' +
-      '<path d="M24 150h122M24 182h122M214 150h122M214 182h122" stroke="#6f5d38" stroke-width="1.2"/>' +
-      '<rect x="20" y="106" width="320" height="8" fill="#c9b47a" stroke="#5c4d2e"/>' +
-      '<rect x="146" y="48" width="68" height="180" fill="url(#wall2)" stroke="#5c4d2e"/>' +
-      '<path d="M138 50 180 22 222 50Z" fill="#b39a62" stroke="#5c4d2e"/>' +
-      '<path d="M180 22V2" stroke="#e8dcc0" stroke-width="1.4"/><path d="M180 3l15 4.5-15 4.5z" fill="#e2574c"/>' +
-      '<circle cx="180" cy="74" r="13" fill="#f7efd9" stroke="#5c4d2e" stroke-width="1.5"/>' +
-      '<path d="M180 74V65M180 74l6 3" stroke="#3a2f1c" stroke-width="1.6" stroke-linecap="round"/>' +
-      '<rect x="152" y="96" width="56" height="15" rx="2" fill="#1d1630" stroke="#ccc38d" stroke-opacity=".7"/>' +
-      '<text x="180" y="107.2" text-anchor="middle" font-size="9.5" letter-spacing="2" fill="#ccc38d" font-family="serif" font-weight="700">' + esc(cfg.HOME.title) + '</text>' +
+      '<ellipse class="glow" cx="180" cy="150" rx="210" ry="125" fill="url(#halo)"/>' +
+      // 草地與平台
+      '<ellipse cx="180" cy="238" rx="176" ry="14" fill="#16261c" stroke="#ccc38d" stroke-opacity=".45"/>' +
+      '<ellipse cx="180" cy="238" rx="152" ry="9" fill="none" stroke="#ccc38d" stroke-opacity=".22" stroke-dasharray="3 4"/>' +
+      // 後排的樹
+      tree(10, 150, 18, '#1d3527') + tree(350, 146, 20, '#1d3527') +
+      // 左翼：架空層 + 大拱
+      '<rect x="20" y="196" width="130" height="30" fill="#1a1424"/>' +
+      '<ellipse cx="85" cy="226" rx="52" ry="12" fill="#ffcf6b" opacity=".18"/>' +
+      '<rect x="20" y="108" width="130" height="92" fill="url(#wall)" stroke="#5c4d2e"/>' +
+      // 右翼
+      '<rect x="214" y="108" width="126" height="118" fill="url(#wall)" stroke="#5c4d2e"/>' +
+      wings +
+      '<rect x="20" y="194" width="130" height="5" fill="#d9c58e" stroke="#5c4d2e" stroke-width=".6"/>' +
+      '<path d="M24 199v27M144 199v27" stroke="#c9b47a" stroke-width="6"/>' +
+      '<path d="M30 226Q85 168 140 226" fill="none" stroke="#e2cf98" stroke-width="6"/>' +
+      '<path d="M48 226Q94 186 140 226" fill="none" stroke="#9a8250" stroke-width="3" opacity=".75"/>' +
+      '<rect x="214" y="196" width="126" height="30" fill="url(#wall)" stroke="#5c4d2e"/>' +
+      arcade +
+      // 主樓
+      fins +
+      '<rect x="150" y="52" width="64" height="174" fill="url(#wall2)" stroke="#5c4d2e"/>' +
+      '<rect x="146" y="50" width="72" height="5" fill="#d9c58e" stroke="#5c4d2e" stroke-width=".6"/>' +
+      // 校徽：藍圓、白三角、紅線
+      '<circle cx="182" cy="70" r="10.5" fill="#2350c4" stroke="#f3ead2" stroke-width="1.2"/>' +
+      '<path d="M182 61.5l7.6 13.5h-15.2z" fill="#fff"/>' +
+      '<path d="M180 69.5v5M182 69v6M184 69.5v5" stroke="#e23b3b" stroke-width="1.1"/>' +
+      '<rect x="154" y="84" width="56" height="14" rx="2" fill="#1d1630" stroke="#ccc38d" stroke-opacity=".7"/>' +
+      '<text x="182" y="94.6" text-anchor="middle" font-size="9.5" letter-spacing="2" fill="#ccc38d" font-family="serif" font-weight="700">' + esc(cfg.HOME.title) + '</text>' +
       wins +
-      '<path class="w" d="M166 228v-18a14 14 0 0128 0v18z" style="--c:#ffe7b0;--wd:1.6s"/>' +
+      '<path class="w" d="M170 226v-16a12 12 0 0124 0v16z" style="--c:#ffe7b0;--wd:1s"/>' +
+      // 前排：路燈與樹
+      lamp(16) + lamp(158) + lamp(206) + lamp(346) +
+      tree(36, 214, 11, '#25432f') + tree(330, 216, 10, '#25432f') +
       '</svg>';
   }
-  const CLOUD = '<svg class="cloud CLS" viewBox="0 0 200 90" aria-hidden="true"><path fill="#b98474" d="M18 70c-14 0-18-18-4-22-2-16 18-24 30-14 6-20 36-24 46-6 12-12 36-6 36 12 18-4 30 12 22 24 14 2 14 18 0 20H22c-2 0-3-1-4-14z"/><path fill="none" stroke="#e6b9a6" stroke-opacity=".5" d="M40 60c10-6 24-4 30 4M98 48c8-6 22-4 28 6"/></svg>';
+  const CLOUD = '<svg class="cloud CLS" viewBox="0 0 200 90" aria-hidden="true"><path fill="FILL" d="M18 70c-14 0-18-18-4-22-2-16 18-24 30-14 6-20 36-24 46-6 12-12 36-6 36 12 18-4 30 12 22 24 14 2 14 18 0 20H22c-2 0-3-1-4-14z"/><path fill="none" stroke="#e6b9a6" stroke-opacity=".5" d="M40 60c10-6 24-4 30 4M98 48c8-6 22-4 28 6"/></svg>';
 
   function viewHome() {
     const H = cfg.HOME;
@@ -1003,7 +986,8 @@
     ni.appendChild(rv(html('p', 't2', rich(H.t2))));
     night.appendChild(ni);
     const town = html('div', 'town', schoolSvg() +
-      CLOUD.replace('CLS', 'c1') + CLOUD.replace('CLS', 'c2') + CLOUD.replace('CLS', 'c3'));
+      [['c3', '#a87266'], ['c4', '#a87266'], ['c1', '#c08c7a'], ['c2', '#c08c7a']]
+        .map(([c, f]) => CLOUD.replace('CLS', c).replace('FILL', f)).join(''));
     night.appendChild(town);
     const letter = el('div', 'home-in letter');
     (H.story || []).forEach((t, n) => letter.appendChild(rv(html('p', null, rich(t)), n * 0.12)));
@@ -1021,43 +1005,13 @@
     if (H.motto) letter.appendChild(rv(el('p', 'motto', H.motto)));
     if (H.signature) letter.appendChild(rv(html('p', 'sign', '<i>Yours Truly,</i><br>' + esc(H.signature)), 0.15));
     const btns = el('div', 'home-btns');
-    const goHow = button('btn-secondary', '怎麼玩');
     const goWish = button('btn-primary', H.fab);
-    btns.append(goHow, goWish);
+    btns.append(goWish);
     letter.appendChild(rv(btns, 0.25));
     night.appendChild(letter);
     w.appendChild(night);
 
-    // ③ 怎麼玩
-    const how = el('section', 'sec how');
-    how.id = 'how';
-    const hi = el('div', 'home-in');
-    hi.appendChild(rv(secHead('怎麼玩', 'HOW TO PLAY')));
-    how.appendChild(hi);
-    const cards = el('div', 'cards');
-    const dots = el('div', 'dots');
-    dots.setAttribute('aria-hidden', 'true');
-    (H.steps || []).forEach((st, n) => {
-      const c = el('article', 'card');
-      c.appendChild(el('div', 'no', String(n + 1).padStart(2, '0')));
-      if (ICONS[st[2]]) c.appendChild(icon(st[2]));
-      c.appendChild(el('h3', null, st[0]));
-      c.appendChild(el('div', 'en', st[1]));
-      c.appendChild(html('p', null, rich(st[3])));
-      cards.appendChild(rv(c, n * 0.15));
-      dots.appendChild(el('i', n ? null : 'on'));
-    });
-    cards.addEventListener('scroll', () => {
-      const first = cards.firstElementChild;
-      if (!first) return;
-      const step = first.getBoundingClientRect().width + 16;
-      const at = Math.round(cards.scrollLeft / step);
-      [...dots.children].forEach((d, n) => d.classList.toggle('on', n === at));
-    }, { passive: true });
-    how.append(cards, dots);
-    w.appendChild(how);
-
-    // ④ 許願
+    // ③ 許願
     const wish = el('section', 'sec wish');
     wish.id = 'wish';
     const wi = el('div', 'home-in');
@@ -1083,7 +1037,6 @@
     };
     fab.onclick = toWish;
     goWish.onclick = toWish;
-    goHow.onclick = () => how.scrollIntoView({ behavior: 'smooth' });
     if ('IntersectionObserver' in window) {
       new IntersectionObserver((es) => es.forEach((e) => { wishSeen = e.isIntersecting; updateScroll(); }),
         { threshold: 0.15 }).observe(wish);
@@ -1093,63 +1046,46 @@
     runGate(() => { revealOnScroll(w); updateScroll(); });
   }
 
-  // 開場：倒數片頭 → 「按下快門，你會想起誰？」→ 快門、閃光、顯影
+  // 開場：觀景窗對焦 → 快門闔上 → 閃光 → 黑白頁面顯影成彩色。不用按，約一秒。
   function runGate(done) {
     const root = document.documentElement;
     const g = $('gate');
     if (!root.classList.contains('gate-on')) { root.classList.remove('undev'); done(); return; }
-    const H = cfg.HOME;
-    const num = g.querySelector('.num');
-    const hint = g.querySelector('.g-hint');
-    const btn = g.querySelector('.g-btn');
-    g.querySelector('.g-q').textContent = H.gateQuestion;
-    btn.textContent = H.gateButton;
-    const hints = (H.hints || []).slice().sort(() => Math.random() - 0.5);
-    let n = 3;
-    const tick = () => { num.textContent = n; hint.textContent = hints.length ? hints[(3 - n) % hints.length] : ''; };
-    tick();
-    const timer = setInterval(() => {
-      if (--n > 0) { tick(); return; }
-      clearInterval(timer);
-      g.dataset.step = 'ask';
-      btn.focus({ preventScroll: true });
-    }, 850);
-
-    let over = false;
-    const finish = (snap) => {
-      if (over) return;
-      over = true;
-      clearInterval(timer);
-      try { sessionStorage.setItem('entered', '1'); } catch (e) {}
-      const open = () => {
-        g.classList.add('out');
-        root.classList.remove('gate-on');
-        setTimeout(() => root.classList.remove('undev'), snap ? 350 : 0);   // 顯影
-        setTimeout(() => g.remove(), 1000);
-        done();
-      };
-      if (!snap) { open(); return; }
-      g.dataset.step = 'snap';
+    try { sessionStorage.setItem('entered', '1'); } catch (e) {}
+    setTimeout(() => {
       g.classList.add('closing');                    // 快門闔上
       setTimeout(() => {
         g.classList.remove('closing');
-        g.classList.add('flash');                    // 閃光
+        g.classList.add('flash', 'out');             // 閃光，開場淡出
         g.style.backgroundColor = 'transparent';
-        open();
+        root.classList.remove('gate-on');
+        setTimeout(() => root.classList.remove('undev'), 350);   // 顯影
+        setTimeout(() => g.remove(), 1000);
+        done();
       }, 230);
-    };
-    btn.onclick = () => finish(true);
-    g.querySelector('.gate-skip').onclick = () => finish(false);
+    }, 900);
   }
 
   function revealOnScroll(root) {
-    const items = root.querySelectorAll('.reveal, .town, .school');
+    const items = root.querySelectorAll('.reveal');
+    const towns = root.querySelectorAll('.town');
     const calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (calm || !('IntersectionObserver' in window)) { items.forEach((n) => n.classList.add('in')); return; }
-    const io = new IntersectionObserver((es) => es.forEach((e) => {
-      if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
-    }), { threshold: 0.2, rootMargin: '0px 0px -6% 0px' });
+    if (calm || !('IntersectionObserver' in window)) {
+      items.forEach((n) => n.classList.add('in'));
+      towns.forEach((n) => n.classList.add('in'));
+      return;
+    }
+    const once = (opts) => {
+      const io = new IntersectionObserver((es) => es.forEach((e) => {
+        if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+      }), opts);
+      return io;
+    };
+    const io = once({ threshold: 0.2, rootMargin: '0px 0px -6% 0px' });
     items.forEach((n) => io.observe(n));
+    // 校舍要整棟進到畫面裡、先看到被雲蓋住，雲才散開
+    const tio = once({ threshold: 0.7 });
+    towns.forEach((n) => tio.observe(n));
   }
 
   // 捲動連動：頂端金線、主視覺淡出與視差、右下角按鈕

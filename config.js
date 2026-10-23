@@ -26,7 +26,6 @@ window.SCAN_CONFIG = {
   HOME: {
     title: '小港高中',
     subtitle: '校慶拍貼',
-    gateQuestion: '按下快門，你會想起誰？',
     t1: '走過這裡的人，\n都會想起一個人',
     t2: '你——\n會想起*哪位老師*？',
     motto: '願這一格，替你記得。',

@@ -21,6 +21,7 @@ window.SCAN_CONFIG = {
   // 意見箱：填了 Google 表單的連結（https 開頭），取件頁就會多一個「去填意見」的按鈕。
   // 留空字串 = 完全不顯示。表單怎麼建、怎麼接 Discord，看主系統資料夾的「意見箱\設定說明.md」。
   FEEDBACK_URL: 'https://docs.google.com/forms/d/e/1FAIpQLSdVGIr9NuNEbbCYeJU7LWlm25H6AFhAaJKsX3TeaO6TiaHrXQ/viewform',
+  FEEDBACK_ENTRY: '150516863',   // 表單那一題的欄位編號；留空就退回成「去填意見」按鈕
   FEEDBACK_TITLE: '意見箱',
   FEEDBACK_TEXT: '想跟哪位老師合影？告訴我們。',
   FEEDBACK_BUTTON: '去填意見',

@@ -273,21 +273,6 @@
     .state { padding-top: 9vh; }
   }
 
-  /* 意見箱 */
-  .feedback { margin-top: 48px; text-align: center; }
-  .feedback .small { margin: 14px 0 20px; }
-  .feedback .btn { max-width: 320px; margin: 0 auto; }
-  .fb-form { max-width: 360px; margin: 0 auto; display: grid; gap: 12px; }
-  .fb-form input[type=text] {
-    width: 100%; min-height: 48px; padding: 0 14px; font: inherit; font-size: 16px;
-    color: var(--cream); background: rgba(255, 231, 197, .06);
-    border: 1px solid var(--line-strong); border-radius: 10px; text-align: center;
-  }
-  .fb-form input[type=text]::placeholder { color: rgba(255, 231, 197, .5); }
-  .fb-form .hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
-  .fb-msg { min-height: 1.4em; margin: 0; font-size: 14px; }
-  .fb-link { display: inline-block; margin-top: 10px; font-size: 13px; color: var(--gold); }
-
   /* 圖片載入前後 */
   img[data-fade] { opacity: 0; transition: opacity .3s; }
   img[data-fade].loaded { opacity: 1; }
@@ -334,8 +319,7 @@
                  同一個分頁只演一次（sessionStorage）
        主視覺     劇院框 + 左右 TIPSY / SOBER 招牌 → 拱窗 + SMILE / CHEESE 招牌，裡面是兩條拍貼
        故事段     夜空、飯店大樓、雲從兩側滑進來 → 夜空、小港高中，雲從校舍前往兩邊散開、教室燈一格一格亮起
-       章節標題   大字中文 + ——◇ ENGLISH ◇——（用在許願池）
-       右下角常駐「預約入住」→「許願合照」
+       章節標題   大字中文 + ——◇ ENGLISH ◇——（用在最後的取件說明）
        信末署名   Yours Truly, 微醺大飯店全體人員 → Yours Truly, 港中攝影組 全體人員
      全部是 CSS / 原生 JS，沒有載入 GSAP 或任何外部檔案。 */
 
@@ -470,7 +454,7 @@
   @keyframes twinkle { to { opacity: .45; } }
   .night .t1, .night .t2 { font: 600 clamp(24px, 7vw, 34px)/1.75 var(--serif); letter-spacing: .1em; }
   .night .t2 { margin-top: 0; }
-  .night em, .wish em { font-style: normal; color: var(--gold); }
+  .night em, .pick em { font-style: normal; color: var(--gold); }
   .town { position: relative; margin: 2vh auto 0; width: min(100%, 520px); }
   .school { display: block; width: 100%; height: auto; overflow: visible; }
   /* 窗戶等雲散開才亮 */
@@ -497,9 +481,6 @@
   .motto { font: 600 20px/1.6 var(--serif) !important; letter-spacing: .2em; color: var(--cream) !important; margin-top: 34px !important; }
   .sign { font-family: var(--serif); line-height: 1.9; }
   .sign i { font-size: 18px; color: var(--gold); }
-  .home-btns { display: flex; gap: 12px; justify-content: center; margin-top: 38px; }
-  .home-btns .btn { width: auto; flex: 1; max-width: 220px; min-height: 48px; border-radius: 999px; font-family: var(--serif); }
-
   /* 章節標題：大字中文 + ——◇ ENGLISH ◇—— */
   .sec { padding: 4vh 0 4vh; text-align: center; }
   .sec-h h2 { font: 700 clamp(26px, 7.4vw, 34px)/1.3 var(--serif); letter-spacing: .32em; text-indent: .32em; color: var(--gold); }
@@ -510,26 +491,14 @@
   .sec-h .en::before { text-align: left; }
   .sec-h .en::after { text-align: right; }
 
-  /* 許願 */
-  .wish .line { margin: 40px 0 28px; font: 600 clamp(22px, 6.4vw, 30px)/1.75 var(--serif); letter-spacing: .08em; text-wrap: balance; }
-  .wish .feedback { margin: 0; }
-  .wish .note2 { margin-top: 18px; }
-  .wish .pickup { margin-top: 56px; }
+  /* 取件 */
+  .pick .badge { margin: 44px auto 0; }
+  .pick .line { margin: 30px 0 0; font: 600 clamp(22px, 6.4vw, 30px)/1.75 var(--serif); letter-spacing: .08em; text-wrap: balance; }
+  .pick .sub { margin-top: 16px; color: var(--muted); text-wrap: balance; }
+  .pick .when { display: inline-block; margin-top: 26px; padding: 8px 18px; border: 1px solid var(--line-strong);
+                border-radius: 999px; font: 600 13px/1.4 var(--serif); letter-spacing: .2em; color: var(--gold); }
   .h-foot { padding: 10vh 0 calc(40px + env(safe-area-inset-bottom)); text-align: center;
             font: 600 11px/2 var(--sans); letter-spacing: .3em; color: var(--muted); }
-
-  /* 右下角常駐的許願按鈕 */
-  #fab { position: fixed; z-index: 8; right: 16px; bottom: max(18px, env(safe-area-inset-bottom));
-         display: none; align-items: center; gap: 8px; padding: 12px 18px; border-radius: 999px; cursor: pointer;
-         border: 1px solid var(--gold); background: rgba(11, 9, 9, .82); color: var(--gold);
-         -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
-         font: 600 14px/1 var(--serif); letter-spacing: .2em;
-         box-shadow: 0 8px 24px rgba(0, 0, 0, .5); opacity: 0; transform: translateY(14px);
-         transition: opacity .35s, transform .35s; }
-  body.home #fab { display: inline-flex; }
-  body.home #fab.show { opacity: 1; transform: none; }
-  #fab:not(.show) { pointer-events: none; }
-  #fab .ico { width: 18px; height: 18px; }
 
   @media (prefers-reduced-motion: reduce) {
     .reveal, .reveal.drop { opacity: 1; transform: none; transition: none; }
@@ -570,7 +539,6 @@
 </header>
 
 <div id="prog" aria-hidden="true"></div>
-<button id="fab" type="button"></button>
 <main class="wrap" id="app"></main>
 
 <div id="toast" role="status" aria-live="polite"></div>
@@ -602,10 +570,6 @@
     PHOTO_BASE: '/data',
     EXPIRED: false,
     EXPIRED_TEXT: '照片已經到期刪除',
-    FEEDBACK_URL: '',
-    FEEDBACK_TITLE: '意見箱',
-    FEEDBACK_TEXT: '想跟哪位老師合影？告訴我們。',
-    FEEDBACK_BUTTON: '去填意見',
   }, window.SCAN_CONFIG || {});
   // 首頁文案：config.js 的 HOME 只要寫想改的那幾項，其他用這裡的
   cfg.HOME = Object.assign({
@@ -613,21 +577,18 @@
     title: '小港高中',
     subtitle: '校慶拍貼',
     signs: ['SMILE', 'CHEESE'],
-    t1: '進來港中後，\n遇到的所有老師',
-    t2: '你......\n會想和*哪位老師*合影？',
+    t1: '高中三年，\n總有幾個想記住的瞬間',
+    t2: '你......\n想和*誰*一起入鏡？',
     story: [
       '校慶這天，攝影組把一台相機、兩台印表機，\n搬進了校園。',
       '和朋友同一格，按下快門，\n當場印出來，一人一條帶回家。',
-      '或是你想和喜歡的老師合拍\n就如同藝人相框一樣\n印出拍貼後你喜歡的老師將站在你的左邊',
     ],
     formula: '青春*3*格　定格青春',
     motto: '願這一格，替你記得。',
     signature: '港中攝影組 全體人員',
-    ask: '如果只能選一位，\n你最想跟*哪位老師*合照？',
-    askNote: '每一則願望，攝影組都會看到。',
-    pickup: '已經拿到拍貼了？掃上面的 QR Code 就能取件。',
-    guides: ['', '往下滑，雲會散開', '最後，一個問題'],   // 三條金線下的提示字，留空就只有線
-    fab: '許願合照',
+    pickLine: '拍完之後，\n掃拍貼上的 *QR Code*',
+    pickSub: '就能下載這次的拍貼，\n和每一張原始照片。',
+    guides: ['', '往下滑，雲會散開', '拍完之後'],   // 三條金線下的提示字，留空就只有線
   }, (window.SCAN_CONFIG || {}).HOME || {});
 
   const $ = (id) => document.getElementById(id);
@@ -659,7 +620,6 @@
     archive: '<path d="M4 7h16v3H4zM6 10v8a1 1 0 001 1h10a1 1 0 001-1v-8M10 14h4"/>',
     chat: '<path d="M5 6h14a1 1 0 011 1v8a1 1 0 01-1 1h-7l-4 3v-3H5a1 1 0 01-1-1V7a1 1 0 011-1z"/>',
     lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/>',
-    sparkle: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.7 1.8 1.8.7-1.8.7L19 21l-.7-1.8-1.8-.7 1.8-.7z"/>',
   };
   function icon(name) {
     const s = document.createElement('span');
@@ -746,89 +706,6 @@
     w.appendChild(el('h1', null, title));
     if (lead) w.appendChild(el('p', 'lead', lead));
     return w;
-  }
-
-  // Google 表單的 viewform 網址 → 對應的送出網址（只認 docs.google.com）
-  function formPostUrl(u) {
-    const m = /^https:\/\/docs\.google\.com\/forms\/d\/e\/([\w-]+)\/viewform/.exec(u);
-    return m ? 'https://docs.google.com/forms/d/e/' + m[1] + '/formResponse' : null;
-  }
-
-  // 頁面內的填寫欄：直接送進 Google 表單。no-cors 讀不到回應，
-  // 所以「成功」只代表有送出去，無法確認表單真的收到；因此保留「改用表單填寫」的備用連結。
-  function inlineForm(post, entry, viewUrl) {
-    const max = 20;
-    const form = el('form', 'fb-form');
-    form.noValidate = true;
-    const input = el('input');
-    input.type = 'text';
-    input.maxLength = max;
-    input.placeholder = '老師的姓名';
-    input.autocomplete = 'off';
-    input.setAttribute('aria-label', '想合影的老師姓名');
-    const hp = el('input', 'hp');           // 機器人才會填的陷阱欄位
-    hp.type = 'text'; hp.tabIndex = -1; hp.autocomplete = 'off'; hp.setAttribute('aria-hidden', 'true');
-    const btn = el('button', 'btn btn-secondary');
-    btn.type = 'submit';
-    btn.appendChild(icon('chat'));
-    btn.appendChild(el('span', null, '送出'));
-    const msg = el('p', 'small fb-msg');
-    msg.setAttribute('role', 'status');
-    const alt = el('a', 'fb-link');
-    alt.href = viewUrl; alt.target = '_blank'; alt.rel = 'noopener noreferrer';
-    alt.textContent = '送不出去？改用表單填寫';
-    form.append(input, hp, btn, msg);
-    let last = 0;
-    form.addEventListener('submit', async (ev) => {
-      ev.preventDefault();
-      const v = input.value.replace(/\s+/g, ' ').trim();
-      if (hp.value) return;
-      if (!v) { msg.textContent = '請先輸入老師的姓名'; input.focus(); return; }
-      if (Array.from(v).length > max) { msg.textContent = '最多 ' + max + ' 個字'; return; }
-      if (Date.now() - last < 15000) { msg.textContent = '請稍等幾秒再送出下一筆'; return; }
-      btn.disabled = true; msg.textContent = '送出中…';
-      try {
-        const body = new URLSearchParams();
-        body.set('entry.' + entry, v);
-        await fetch(post, { method: 'POST', mode: 'no-cors', body });
-        last = Date.now();
-        input.value = '';
-        msg.textContent = '收到了，謝謝你的願望！';
-      } catch (e) {
-        msg.textContent = '送出失敗，請檢查網路';
-      }
-      btn.disabled = false;
-    });
-    const wrap = el('div');
-    wrap.append(form, alt);
-    return wrap;
-  }
-
-  // 意見箱連結。沒設定、或不是 https 開頭就不顯示：
-  // 一來沒填的時候不會出現壞掉的按鈕，二來擋掉 javascript: 之類的怪網址。
-  function feedbackBlock(bare) {
-    const url = String(cfg.FEEDBACK_URL || '').trim();
-    if (!/^https:\/\//i.test(url)) return null;
-    const box = el(bare ? 'div' : 'section', 'feedback');
-    if (!bare) {
-      const h = el('h2', 'orn-title');
-      h.appendChild(el('span', 't', cfg.FEEDBACK_TITLE));
-      box.appendChild(h);
-      box.appendChild(el('p', 'small', cfg.FEEDBACK_TEXT));
-    }
-    const post = formPostUrl(url);
-    if (post && /^\d+$/.test(String(cfg.FEEDBACK_ENTRY || ''))) {
-      box.appendChild(inlineForm(post, String(cfg.FEEDBACK_ENTRY), url));
-      return box;
-    }
-    const a = el('a', 'btn btn-secondary');
-    a.href = url;
-    a.target = '_blank';
-    a.rel = 'noopener noreferrer';
-    a.appendChild(icon('chat'));
-    a.appendChild(el('span', null, cfg.FEEDBACK_BUTTON));
-    box.appendChild(a);
-    return box;
   }
 
   // 三步進度：拍攝 ✓ → 整理中（現在）→ 取件
@@ -1028,44 +905,26 @@
     if (H.formula) letter.appendChild(rv(html('p', 'formula', rich(H.formula))));
     if (H.motto) letter.appendChild(rv(el('p', 'motto', H.motto)));
     if (H.signature) letter.appendChild(rv(html('p', 'sign', '<i>Yours Truly,</i><br>' + esc(H.signature)), 0.15));
-    const btns = el('div', 'home-btns');
-    const goWish = button('btn-primary', H.fab);
-    btns.append(goWish);
-    letter.appendChild(rv(btns, 0.25));
     night.appendChild(letter);
     w.appendChild(night);
 
-    // ③ 許願
-    const wish = el('section', 'sec wish');
-    wish.id = 'wish';
-    const wi = el('div', 'home-in');
-    wi.appendChild(thread(guides[2]));
-    wi.appendChild(rv(secHead('許願池', 'MAKE A WISH')));
-    wi.appendChild(rv(html('p', 'line', rich(H.ask)), 0.1));
-    const fb = feedbackBlock(true);
-    if (fb) wi.appendChild(rv(fb, 0.2));
-    if (H.askNote) wi.appendChild(rv(el('p', 'small note2', H.askNote), 0.3));
-    if (H.pickup) wi.appendChild(rv(el('p', 'small pickup', H.pickup), 0.4));
-    wish.appendChild(wi);
-    w.appendChild(wish);
+    // ③ 取件
+    const pick = el('section', 'sec pick');
+    const pi = el('div', 'home-in');
+    pi.appendChild(thread(guides[2]));
+    pi.appendChild(rv(secHead('取件', 'PICK UP')));
+    const badge = el('div', 'badge');
+    badge.appendChild(icon('qr'));
+    pi.appendChild(rv(badge, 0.1));
+    pi.appendChild(rv(html('p', 'line', rich(H.pickLine)), 0.15));
+    pi.appendChild(rv(html('p', 'sub', rich(H.pickSub)), 0.25));
+    if (cfg.READY_TEXT) pi.appendChild(rv(el('p', 'when', '照片' + cfg.READY_TEXT), 0.35));
+    pick.appendChild(pi);
+    w.appendChild(pick);
     w.appendChild(html('footer', 'h-foot', esc(H.title) + ' · ' + esc(H.signature)));
 
     show(false, w);
     document.body.classList.add('home');
-
-    const fab = $('fab');
-    fab.replaceChildren(icon('sparkle'), el('span', null, H.fab));
-    const toWish = () => {
-      const target = wish.querySelector('.line') || wish;
-      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      setTimeout(() => { const inp = wish.querySelector('input[type=text]'); if (inp) inp.focus({ preventScroll: true }); }, 900);
-    };
-    fab.onclick = toWish;
-    goWish.onclick = toWish;
-    if ('IntersectionObserver' in window) {
-      new IntersectionObserver((es) => es.forEach((e) => { wishSeen = e.isIntersecting; updateScroll(); }),
-        { threshold: 0.15 }).observe(wish);
-    }
 
     // 開場結束之後才開始讓主視覺進場，不然動畫在開場後面就演完了
     threads = [...w.querySelectorAll('.thread')];
@@ -1120,15 +979,13 @@
     towns.forEach((n) => tio.observe(n));
   }
 
-  // 捲動連動：頂端金線、主視覺淡出與視差、右下角按鈕
-  let wishSeen = false;
+  // 捲動連動：頂端金線、主視覺淡出與視差、段落間的金線
   let threads = [];
   function updateScroll() {
     const max = document.documentElement.scrollHeight - innerHeight;
     $('prog').style.setProperty('--p', max > 0 ? Math.min(1, scrollY / max) : 0);
     if (!document.body.classList.contains('home')) return;
     document.body.style.setProperty('--hs', Math.min(1, scrollY / innerHeight).toFixed(3));
-    $('fab').classList.toggle('show', scrollY > innerHeight * 0.6 && !wishSeen);
     if (scrollY > 40) { const c = document.querySelector('.cue.nudge'); if (c) c.classList.remove('nudge'); }
     // 金線：線的上端進到畫面 85% 高度開始畫，到 40% 高度畫完
     threads.forEach((t) => {
@@ -1159,8 +1016,6 @@
     w.appendChild(stepsView(2));
     w.appendChild(btn);
     w.appendChild(status);
-    const fb = feedbackBlock();
-    if (fb) w.appendChild(fb);
     show(false, w);
   }
 
@@ -1300,9 +1155,6 @@
       box.appendChild(grid);
       side.appendChild(box);
     }
-
-    const fb = feedbackBlock();
-    if (fb) side.appendChild(fb);
 
     root.appendChild(side);
     show(true, root);

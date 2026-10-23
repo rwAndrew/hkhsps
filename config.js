@@ -18,29 +18,22 @@ window.SCAN_CONFIG = {
   // 上傳後用 `node export-web.js --check https://rwandrew.github.io/hkhsps-photos` 驗證。
   PHOTO_BASE: 'https://rwandrew.github.io/hkhsps-photos/data',
 
-  // 意見箱：填了 Google 表單的連結（https 開頭），取件頁就會多一個「去填意見」的按鈕。
-  // 留空字串 = 完全不顯示。表單怎麼建、怎麼接 Discord，看主系統資料夾的「意見箱\設定說明.md」。
-  FEEDBACK_URL: 'https://docs.google.com/forms/d/e/1FAIpQLSdVGIr9NuNEbbCYeJU7LWlm25H6AFhAaJKsX3TeaO6TiaHrXQ/viewform',
-  FEEDBACK_ENTRY: '150516863',   // 表單那一題的欄位編號；留空就退回成「去填意見」按鈕
   // 首頁文案。只寫想改的項目就好，沒寫的用預設值。*星號* 包住的字變金色，\n 是換行。
   HOME: {
     title: '小港高中',
     subtitle: '校慶拍貼',
-    t1: '進來港中後，\n遇到的所有老師',
-    t2: '你......\n會想和*哪位老師*合影？',
+    t1: '高中三年，\n總有幾個想記住的瞬間',
+    t2: '你......\n想和*誰*一起入鏡？',
     story: [
       '校慶這天，攝影組把一台相機、兩台印表機，\n搬進了校園。',
       '和朋友同一格，按下快門，\n當場印出來，一人一條帶回家。',
-      '或是你想和喜歡的老師合拍\n就如同藝人相框一樣\n印出拍貼後你喜歡的老師將站在你的左邊',
     ],
     formula: '青春*3*格　定格青春',
     motto: '願這一格，替你記得。',
     signature: '港中攝影組 全體人員',
-    ask: '如果只能選一位，\n你最想跟*哪位老師*合照？',
+    pickLine: '拍完之後，\n掃拍貼上的 *QR Code*',
+    pickSub: '就能下載這次的拍貼，\n和每一張原始照片。',
   },
-  FEEDBACK_TITLE: '意見箱',
-  FEEDBACK_TEXT: '想跟哪位老師合影？告訴我們。',
-  FEEDBACK_BUTTON: '去填意見',
 
   // 照片過了保留期限、已經刪除之後，改成 true 再推上去。
   // 不改的話，客人掃 QR 會看到「今晚 8 點前上線」，但其實永遠不會有了。

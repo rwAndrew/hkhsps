@@ -327,7 +327,43 @@
   }
   #toast.show { opacity: 1; transform: translate(-50%, 0); }
 
+  /* ── 首頁：往下滑的故事 ───────────────────────────────── */
+  #prog { position: fixed; top: 0; left: 0; height: 2px; width: 100%; z-index: 9;
+          background: linear-gradient(90deg, transparent, var(--gold)); transform-origin: 0 50%;
+          transform: scaleX(var(--p, 0)); opacity: 0; transition: opacity .3s; pointer-events: none; }
+  body.home #prog { opacity: .9; }
+  .story { text-align: center; }
+  .scene { min-height: 58vh; min-height: 58svh; display: flex; flex-direction: column;
+           justify-content: center; align-items: center; padding: 9vh 0; }
+  .scene.hero { min-height: calc(100svh - 150px); padding-top: 4vh; position: relative; }
+  .hero h1 { font: 600 clamp(26px, 7.4vw, 40px)/1.55 var(--serif); letter-spacing: .08em; color: var(--cream); text-wrap: balance; }
+  .hero h1 em, .line em { font-style: normal; color: var(--gold); }
+  .hero .lead { margin-top: 18px; }
+  .line { font: 600 clamp(22px, 6.4vw, 30px)/1.75 var(--serif); letter-spacing: .08em; text-wrap: balance; }
+  .scene .no { font: 600 12px/1 var(--sans); letter-spacing: .4em; text-indent: .4em; color: var(--gold);
+               opacity: .85; margin-bottom: 22px; }
+  .scene .sub { margin-top: 18px; max-width: 21em; color: var(--muted); text-wrap: balance; }
+  .scene .rule { margin: 0 auto 24px; width: 140px; }
+  .cue { position: absolute; left: 50%; bottom: 3vh; transform: translateX(-50%);
+         display: flex; flex-direction: column; align-items: center; gap: 10px;
+         font: 600 11px/1 var(--sans); letter-spacing: .4em; text-indent: .4em; color: var(--gold); }
+  .cue i { width: 1px; height: 44px; background: linear-gradient(var(--gold), transparent);
+           transform-origin: 0 0; animation: drip 2.2s ease-in-out infinite; }
+  @keyframes drip { 0% { transform: scaleY(0); opacity: 1; } 60% { transform: scaleY(1); opacity: 1; }
+                    100% { transform: scaleY(1); opacity: 0; } }
+  .reveal { opacity: 0; transform: translateY(30px);
+            transition: opacity 1s ease, transform 1s cubic-bezier(.2, .7, .2, 1); transition-delay: var(--d, 0s); }
+  .reveal.in { opacity: 1; transform: none; }
+  .cue.reveal.in { transform: translateX(-50%); }
+  .cue.reveal { transform: translate(-50%, 30px); }
+  .ask .line { margin-bottom: 26px; }
+  .ask .feedback { width: 100%; }
+  .ask .pickup { margin-top: 44px; }
+
   @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1; transform: none; transition: none; }
+    .cue.reveal, .cue.reveal.in { transform: translateX(-50%); }
+    .cue i { animation: none; }
     .sk, .step.now .dot, main > * { animation: none; }
     * { transition-duration: .01ms !important; }
   }
@@ -343,6 +379,7 @@
   </div>
 </header>
 
+<div id="prog" aria-hidden="true"></div>
 <main class="wrap" id="app"></main>
 
 <div id="toast" role="status" aria-live="polite"></div>
@@ -378,6 +415,11 @@
     FEEDBACK_TITLE: '意見箱',
     FEEDBACK_TEXT: '想跟哪位老師合影？告訴我們。',
     FEEDBACK_BUTTON: '去填意見',
+    HOME_HERO: '拍貼取件',
+    HOME_HERO_SUB: '',
+    HOME_SCENES: [],
+    HOME_ASK: '想跟哪位老師合影？',
+    HOME_PICKUP: '掃描照片上的 QR Code，就能下載你的拍貼與原始照片。',
   }, window.SCAN_CONFIG || {});
 
   const $ = (id) => document.getElementById(id);
@@ -451,6 +493,7 @@
   // 換畫面：清空、放新內容、把焦點移到標題（螢幕閱讀器才知道畫面變了）
   function show(wide, ...nodes) {
     document.body.classList.toggle('wide', !!wide);
+    document.body.classList.remove('home');
     app.replaceChildren(...nodes);
     const h = app.querySelector('h1');
     if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); }
@@ -553,14 +596,16 @@
 
   // 意見箱連結。沒設定、或不是 https 開頭就不顯示：
   // 一來沒填的時候不會出現壞掉的按鈕，二來擋掉 javascript: 之類的怪網址。
-  function feedbackBlock() {
+  function feedbackBlock(bare) {
     const url = String(cfg.FEEDBACK_URL || '').trim();
     if (!/^https:\/\//i.test(url)) return null;
-    const box = el('section', 'feedback');
-    const h = el('h2', 'orn-title');
-    h.appendChild(el('span', 't', cfg.FEEDBACK_TITLE));
-    box.appendChild(h);
-    box.appendChild(el('p', 'small', cfg.FEEDBACK_TEXT));
+    const box = el(bare ? 'div' : 'section', 'feedback');
+    if (!bare) {
+      const h = el('h2', 'orn-title');
+      h.appendChild(el('span', 't', cfg.FEEDBACK_TITLE));
+      box.appendChild(h);
+      box.appendChild(el('p', 'small', cfg.FEEDBACK_TEXT));
+    }
     const post = formPostUrl(url);
     if (post && /^\d+$/.test(String(cfg.FEEDBACK_ENTRY || ''))) {
       box.appendChild(inlineForm(post, String(cfg.FEEDBACK_ENTRY), url));
@@ -604,12 +649,64 @@
   }
 
   // 沒帶編號：直接開網域的人。這不是錯誤，是歡迎畫面。
+  // 首頁：一段一段往下滑才浮出來，最後落在「想跟哪位老師合影」的填寫欄。
+  // 文字都在 config.js 的 HOME_* 可以改。
   function viewHome() {
-    const w = stateView('qr', cfg.SITE_TITLE, '掃描照片上的 QR Code，就能下載你的拍貼與原始照片。');
-    const fb = feedbackBlock();   // 活動前後都能填，不用等拿到照片
-    if (fb) w.appendChild(fb);
+    const w = el('div', 'story');
+    const rv = (node, delay) => { node.classList.add('reveal'); node.style.setProperty('--d', (delay || 0) + 's'); return node; };
+    const rule = () => { const r = el('div', 'rule'); r.setAttribute('aria-hidden', 'true');
+      r.innerHTML = '<i></i><span>◇</span><i></i>'; return r; };
+    const html = (tag, cls, h) => { const n = el(tag, cls); n.innerHTML = h; return n; };
+    const esc = (t) => String(t).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+    // 文字裡用 *星號* 包住的部分會變金色，\n 換行
+    const gold = (t) => esc(t).replace(/\*([^*]+)\*/g, '<em>$1</em>').replace(/\n/g, '<br>');
+
+    const hero = el('section', 'scene hero');
+    hero.appendChild(rv(html('h1', null, gold(cfg.HOME_HERO)), 0));
+    hero.appendChild(rv(el('p', 'lead', cfg.HOME_HERO_SUB), .25));
+    const cue = el('div', 'cue'); cue.setAttribute('aria-hidden', 'true');
+    cue.append(el('span', null, '往下滑'), el('i'));
+    hero.appendChild(rv(cue, .6));
+    w.appendChild(hero);
+
+    (cfg.HOME_SCENES || []).forEach((sc, n) => {
+      const sec = el('section', 'scene');
+      sec.appendChild(rv(el('div', 'no', String(n + 1).padStart(2, '0')), 0));
+      sec.appendChild(rv(html('p', 'line', gold(sc[0])), .12));
+      if (sc[1]) sec.appendChild(rv(el('p', 'sub', sc[1]), .3));
+      w.appendChild(sec);
+    });
+
+    const ask = el('section', 'scene ask');
+    ask.appendChild(rv(rule(), 0));
+    ask.appendChild(rv(html('p', 'line', gold(cfg.HOME_ASK)), .1));
+    const fb = feedbackBlock(true);   // 活動前後都能填，不用等拿到照片
+    if (fb) ask.appendChild(rv(fb, .3));
+    ask.appendChild(rv(el('p', 'small pickup', cfg.HOME_PICKUP), .45));
+    w.appendChild(ask);
+
     show(false, w);
+    document.body.classList.add('home');
+    revealOnScroll(w);
+    updateProgress();
   }
+
+  function revealOnScroll(root) {
+    const items = root.querySelectorAll('.reveal');
+    const calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (calm || !('IntersectionObserver' in window)) { items.forEach((n) => n.classList.add('in')); return; }
+    const io = new IntersectionObserver((es) => es.forEach((e) => {
+      if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+    }), { threshold: 0.2, rootMargin: '0px 0px -8% 0px' });
+    items.forEach((n) => io.observe(n));
+  }
+
+  // 頂端的細金線：滑到哪、還剩多少
+  function updateProgress() {
+    const max = document.documentElement.scrollHeight - innerHeight;
+    document.getElementById('prog').style.setProperty('--p', max > 0 ? Math.min(1, scrollY / max) : 0);
+  }
+  addEventListener('scroll', () => requestAnimationFrame(updateProgress), { passive: true });
 
   // 編號格式不對：不發任何請求
   function viewInvalid() {

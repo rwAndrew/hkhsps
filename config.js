@@ -22,16 +22,17 @@ window.SCAN_CONFIG = {
   // 留空字串 = 完全不顯示。表單怎麼建、怎麼接 Discord，看主系統資料夾的「意見箱\設定說明.md」。
   FEEDBACK_URL: 'https://docs.google.com/forms/d/e/1FAIpQLSdVGIr9NuNEbbCYeJU7LWlm25H6AFhAaJKsX3TeaO6TiaHrXQ/viewform',
   FEEDBACK_ENTRY: '150516863',   // 表單那一題的欄位編號；留空就退回成「去填意見」按鈕
-  // 首頁的捲動故事。文字裡 *星號* 包住的部分會變金色，\n 是換行；HOME_SCENES 每項是 [大字, 小字]。
-  HOME_HERO: '校慶那天，\n留一格*屬於你的青春*',
-  HOME_HERO_SUB: '往下滑，有件事想問你。',
-  HOME_SCENES: [
-    ['三格畫面，\n*一張底片*', '和朋友站在一起，按下快門，當場印出來帶走。'],
-    ['原圖，\n也都替你留著', '照片上有一個 QR Code，掃一下，就能下載你的拍貼與原始照片。'],
-    ['不過，\n總少了*一個人*', '那位陪我們三年的老師，值得站進這一格。'],
-  ],
-  HOME_ASK: '如果只能選一位，\n你最想跟*哪位老師*合照？',
-  HOME_PICKUP: '已經拿到照片了？掃紙上的 QR Code 就能取件。',
+  // 首頁文案。只寫想改的項目就好，沒寫的用預設值。*星號* 包住的字變金色，\n 是換行。
+  HOME: {
+    title: '小港高中',
+    subtitle: '校慶拍貼',
+    gateQuestion: '按下快門，你會想起誰？',
+    t1: '走過這裡的人，\n都會想起一個人',
+    t2: '你——\n會想起*哪位老師*？',
+    motto: '願這一格，替你記得。',
+    signature: '港中攝影組 全體人員',
+    ask: '如果只能選一位，\n你最想跟*哪位老師*合照？',
+  },
   FEEDBACK_TITLE: '意見箱',
   FEEDBACK_TEXT: '想跟哪位老師合影？告訴我們。',
   FEEDBACK_BUTTON: '去填意見',

@@ -7,7 +7,7 @@
 ## 運作方式
 
 ```
-QR 內容:  https://rwandrew.github.io/hkhsps/#K7WHMX3B.金鑰
+QR 內容:  https://www.hkhs.work.gd/#K7WHMX3B.金鑰
                                             └編號─┘ └─128 位元金鑰
               │
               │  # 之後的內容「不會」送給伺服器，GitHub 看不到金鑰
@@ -90,11 +90,24 @@ data/
 ## 架構：兩個公開的 GitHub repo
 
 ```
-repo  hkhsps          網頁程式  → https://rwandrew.github.io/hkhsps/
+repo  hkhsps          網頁程式  → https://www.hkhs.work.gd/          （自訂網域，DNSExit）
 repo  hkhsps-photos   加密照片  → https://rwandrew.github.io/hkhsps-photos/data/…
 ```
 
-兩個都在 `rwandrew.github.io` 底下，**屬於同一個來源，所以完全不用處理 CORS**。
+兩者**不同來源**，照片是跨來源讀取。這可行，因為 GitHub Pages 的 200 回應都帶
+`Access-Control-Allow-Origin: *`；404 沒帶，頁面對這個情況有補救（見下方）。
+所以 `config.js` 的 `PHOTO_BASE` 必須是完整網址，不能寫相對路徑。
+
+### 自訂網域的來龍去脈（別重蹈覆轍）
+
+- 用的是 **`www.hkhs.work.gd`**，不是 `hkhs.work.gd`。`hkhs.work.gd` 是 DNSExit 的**區域根**
+  （自帶 NS/SOA 記錄），DNS 規定根上不能放 CNAME（DNSExit 的錯誤訊息：`CNAME and other data`），
+  只能用 A 記錄，結果 GitHub 的憑證一直卡在 `dns_changed`。
+- `www` 是真正的子網域，用 CNAME 指向 `rwandrew.github.io`，憑證很快就發下來。
+  憑證涵蓋 `hkhs.work.gd` 與 `www.hkhs.work.gd`，根網域會 301 到 `www`。
+- DNSExit 的 **Dynamic DNS 要保持關閉**，否則它會把記錄改回你家的 IP。
+- ⚠ **自訂網域一旦設定，`rwandrew.github.io/hkhsps/` 會 301 轉到自訂網域，不能當備援。**
+  `work.gd` 是 DNSExit 的免費網域，哪天它不解析了，印在紙上的 QR 就全部失效。
 
 - **刪照片 = 刪 `hkhsps-photos` 這個 repo**，一個動作，頁面不受影響。
 - **`hkhsps` 不要刪。** 刪掉之後這個網址很可能會被釋放（我沒查證 GitHub 的實際規則），

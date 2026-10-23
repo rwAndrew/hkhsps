@@ -407,13 +407,13 @@
                    background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, .13) 48%, transparent 60%);
                    transform: translateX(-100%); animation: sheen 6s 2.5s ease-in-out infinite; }
   @keyframes sheen { 30%, 100% { transform: translateX(100%); } }
-  .strip { position: absolute; top: 15%; width: 40%; padding: 4% 4% 0; background: #fbf6ea; border-radius: 2px;
+  .h-strip { position: absolute; top: 15%; width: 40%; padding: 4% 4% 0; background: #fbf6ea; border-radius: 2px;
            box-shadow: 0 14px 28px rgba(0, 0, 0, .45); display: grid; gap: 4%; }
-  .strip.s1 { left: 15%; transform: rotate(-7deg); }
-  .strip.s2 { right: 13%; top: 22%; transform: rotate(6deg); }
-  .strip i { display: block; aspect-ratio: 4 / 3; border-radius: 1px; background-repeat: no-repeat;
+  .h-strip.s1 { left: 15%; transform: rotate(-7deg); }
+  .h-strip.s2 { right: 13%; top: 22%; transform: rotate(6deg); }
+  .h-strip i { display: block; aspect-ratio: 4 / 3; border-radius: 1px; background-repeat: no-repeat;
              background-position: center bottom; background-size: 86% auto; }
-  .strip b { display: block; height: 20px;     /* 拍貼底部的 QR Code 位置 */
+  .h-strip b { display: block; height: 20px;     /* 拍貼底部的 QR Code 位置 */
              background: repeating-conic-gradient(#222 0 25%, #0000 0 50%) right 2px center / 5px 5px;
              -webkit-mask: linear-gradient(#000, #000) right 2px center / 14px 14px no-repeat;
                      mask: linear-gradient(#000, #000) right 2px center / 14px 14px no-repeat; }
@@ -500,10 +500,60 @@
   .h-foot { padding: 10vh 0 calc(40px + env(safe-area-inset-bottom)); text-align: center;
             font: 600 11px/2 var(--sans); letter-spacing: .3em; color: var(--muted); }
 
+
+  /* ══ 取件中：信鴿叼信飛來 → 放下信 → 信封打開、拍貼滑出 → 接到取件頁 ══
+     下載與解密同時在跑；鴿子飛到之後如果還沒好，就在原地拍翅膀等。 */
+  html { overflow-x: hidden; }
+  @supports (overflow: clip) { html { overflow-x: clip; } }
+  .post { position: relative; width: min(84vw, 320px); height: 280px; margin: 0 auto 6px; }
+  .pg { position: absolute; left: 50%; top: 0; width: 180px; margin-left: -74px; z-index: 4;
+        transform: translate(78vw, -60vh) scale(.8); }
+  .post.fly .pg { transform: none; transition: transform 1.15s cubic-bezier(.15, .7, .3, 1); }
+  .post.away .pg { transform: translate(-90vw, -75vh) rotate(-12deg) scale(.85);
+                   transition: transform 1s cubic-bezier(.55, 0, .85, .4); }
+  .pg-b { animation: bob 1.1s ease-in-out infinite alternate; }
+  @keyframes bob { to { transform: translateY(-6px); } }
+  .pg svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .pg .wing { transform-box: fill-box; transform-origin: 18% 100%; animation: flap .3s ease-in-out infinite alternate; }
+  .pg .wing.far { animation-delay: -.05s; }
+  @keyframes flap { from { transform: scaleY(1); } to { transform: scaleY(-.5); } }
+  .pg .carry { transition: opacity .1s; }
+  .post.drop .pg .carry { opacity: 0; }
+
+  .env { position: absolute; left: 50%; bottom: 10px; width: 190px; height: 124px; margin-left: -95px;
+         perspective: 700px; opacity: 0; transform: translate(-46px, -170px) scale(.16) rotate(-14deg); }
+  .env::after { content: ""; position: absolute; left: 6%; right: 6%; bottom: -12px; height: 14px; z-index: -1;
+                border-radius: 50%; background: radial-gradient(rgba(0, 0, 0, .55), transparent 70%); }
+  .post.drop .env { opacity: 1; transform: none; transition: transform .6s cubic-bezier(.3, 1.35, .5, 1), opacity .12s; }
+  .env > * { position: absolute; }
+  .env-back { inset: 0; border-radius: 5px; background: #e2d2ae; }
+  .env-letter { left: 9%; right: 9%; bottom: 8px; height: 108px; z-index: 1; border-radius: 3px;
+                display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 7px; padding-top: 10px;
+                background: #fbf6ea; box-shadow: 0 2px 8px rgba(0, 0, 0, .2);
+                transition: transform .6s cubic-bezier(.2, .8, .2, 1) .28s; }
+  .post.open .env-letter { transform: translateY(-88px); }
+  .env-letter .mini { width: 40px; padding: 3px 3px 7px; display: grid; gap: 2px; background: #fff;
+                      box-shadow: 0 1px 4px rgba(0, 0, 0, .25); transform: rotate(-4deg); }
+  .env-letter .mini i { display: block; aspect-ratio: 4 / 3; background-repeat: no-repeat;
+                        background-position: center bottom; background-size: 86% auto; }
+  .env-letter span { font: 700 11px/1 var(--serif); letter-spacing: .22em; text-indent: .22em; color: #6b5a36; }
+  .env-front { inset: 0; z-index: 2; border-radius: 5px; background: linear-gradient(#f1e4c6, #e8d8b4);
+               clip-path: polygon(0 0, 50% 70%, 100% 0, 100% 100%, 0 100%); }   /* 只留上蓋那塊三角形是開口 */
+  .env-flap { left: 0; right: 0; top: 0; height: 70%; z-index: 3; transform-origin: top;
+              background: linear-gradient(#efe1c1, #e3d1a9); clip-path: polygon(0 0, 100% 0, 50% 100%);
+              transition: transform .45s ease, z-index 0s .22s; }
+  .post.open .env-flap { transform: rotateX(180deg); z-index: 0; }
+  .env-flap b { position: absolute; left: 50%; top: 74%; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%;
+                background: radial-gradient(circle at 38% 32%, #e3594b, #9b271d 70%); box-shadow: 0 1px 2px rgba(0, 0, 0, .35); }
+  .post.open .env-flap b { opacity: 0; transition: opacity .1s .2s; }
+  .post.out .env { transform: scale(1.06); opacity: 0; transition: transform .4s ease, opacity .4s ease; }
+  .post.out .pg { opacity: 0; }
+
   @media (prefers-reduced-motion: reduce) {
     .reveal, .reveal.drop { opacity: 1; transform: none; transition: none; }
     .cloud { transition: none; }
     .town.in .school .w { transition-delay: 0s; }
+    .pg-b, .pg .wing { animation: none; }
     .h-stage, .h-top { transform: none; opacity: 1; }
     .cue svg, .cue::after, .h-sign, .h-arch::after, .night::before, .finder .focus { animation: none; }
     .thread { --t: 1 !important; }
@@ -770,7 +820,7 @@
     ['linear-gradient(160deg,#b9a2ff,#ff9ec4)', 'linear-gradient(160deg,#ffd27f,#ff8a6b)', 'linear-gradient(160deg,#7fe6d4,#6f9dff)'],
   ];
   function strip(n) {
-    const st = el('div', 'strip s' + (n + 1));
+    const st = el('div', 'h-strip s' + (n + 1));
     FRAMES[n].forEach((bg) => { const f = el('i'); f.style.backgroundImage = PEOPLE + ',' + bg; st.appendChild(f); });
     st.appendChild(el('b'));
     return st;
@@ -1445,15 +1495,83 @@
   }
 
   // 解密進度：檔案要整個下載完才能解，所以一定要有回饋
-  function viewDecrypting() {
-    const w = stateView('lock', '正在解鎖你的照片', '照片是加密保存的，需要先下載並解開。');
+  // 信鴿（側面、頭朝左）。嘴上叼著一封小信。
+  const PIGEON_SVG = '<svg viewBox="0 0 140 92" aria-hidden="true">' +
+    '<defs><linearGradient id="sheen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6fcf9f"/><stop offset="1" stop-color="#a77fd8"/></linearGradient></defs>' +
+    '<path class="wing far" d="M70 42C74 20 92 8 112 8C100 18 92 30 86 44Z" fill="#9f99b3"/>' +
+    '<path d="M98 46L132 42L135 51L131 59L98 56Z" fill="#b9b3c9"/><path d="M126 43L132 42L135 51L131 59L126 58Z" fill="#6f6984"/>' +
+    '<path d="M34 46C40 32 70 30 100 44C105 48 105 54 98 57C80 65 50 65 38 57C34 54 33 50 34 46Z" fill="#e9e4f0"/>' +
+    '<path d="M42 55C56 62 78 62 94 56" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="3" stroke-linecap="round"/>' +
+    '<path d="M28 44C33 51 42 53 49 50C47 43 41 38 34 38Z" fill="url(#sheen)" opacity=".85"/>' +
+    '<circle cx="30" cy="36" r="10" fill="#d9d4e6"/>' +
+    '<circle cx="26.5" cy="33" r="2.3" fill="#ff8a3d"/><circle cx="26.5" cy="33" r="1.1" fill="#1a1a1a"/>' +
+    '<ellipse cx="20.5" cy="35.2" rx="2.2" ry="1.4" fill="#f4f1f7"/>' +
+    '<path d="M20 35L10.5 38.2L20 39.2Z" fill="#6b6470"/>' +
+    '<path d="M62 63l-3 6M70 63l-2 6" stroke="#e58a8a" stroke-width="1.8" stroke-linecap="round"/>' +
+    '<g class="wing near"><path d="M56 44C60 17 86 3 110 5C96 15 88 29 82 47Z" fill="#cdc7db" stroke="#9f99b3" stroke-width=".8"/>' +
+    '<path d="M88 11L80 32M97 9L89 29M105 8L95 25" stroke="#9f99b3" stroke-width=".9" opacity=".8"/>' +
+    '<path d="M64 38L80 34M66 42L82 39" stroke="#6f6984" stroke-width="2" stroke-linecap="round" opacity=".55"/></g>' +
+    '<g class="carry" transform="translate(-1 37) rotate(12)">' +
+    '<rect width="21" height="14" rx="1.5" fill="#fbf3df" stroke="#ccc38d" stroke-width=".8"/>' +
+    '<path d="M0 0L10.5 7.5L21 0" fill="none" stroke="#ccc38d" stroke-width=".8"/><circle cx="10.5" cy="7.5" r="1.7" fill="#c0392b"/></g>' +
+    '</svg>';
+
+  // 取件中。回傳 { progress(i, n), finish() }：
+  //   progress 由解密回報進度；finish 在解密完成後呼叫，演完「放信、開信」才 resolve。
+  // 同一組照片在同一個分頁只演一次，重新整理之後直接顯示進度，不用再等動畫。
+  function viewDecrypting(id) {
+    const w = stateView('archive', '取件中', '信鴿正把你的照片送過來……');
+    w.querySelector('.badge').remove();
+    const post = el('div', 'post');
+    post.setAttribute('aria-hidden', 'true');
+    const pg = el('div', 'pg');
+    const pb = html('div', 'pg-b', PIGEON_SVG);
+    pg.appendChild(pb);
+    const env = el('div', 'env');
+    const letter = el('div', 'env-letter');
+    const mini = el('div', 'mini');
+    FRAMES[0].forEach((bg) => { const f = el('i'); f.style.backgroundImage = PEOPLE + ',' + bg; mini.appendChild(f); });
+    letter.append(mini, el('span', null, '你的拍貼'));
+    const flap = el('div', 'env-flap');
+    flap.appendChild(el('b'));
+    env.append(el('div', 'env-back'), letter, el('div', 'env-front'), flap);
+    post.append(pg, env);
+    w.insertBefore(post, w.firstChild);
     const p = el('p', 'small status', '準備中…');
-    p.id = 'decstat';
     w.appendChild(p);
     show(false, w);
-    return (i, n) => {
-      const el2 = $('decstat');
-      if (el2) el2.textContent = i >= n ? '快好了…' : `解鎖中　${i + 1} / ${n}`;
+
+    const KEY = 'pigeon:' + id;
+    let seen = false;
+    try { seen = sessionStorage.getItem(KEY) === '1'; } catch (e) {}
+    const calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const play = !seen && !calm;
+    const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+    let arrived = Promise.resolve();
+    if (play) {
+      // 先畫一幀起點，下一幀才加 class，transition 才會動
+      arrived = new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => {
+        post.classList.add('fly');
+        setTimeout(r, 1150);
+      })));
+    } else {
+      post.classList.add('fly', 'drop', 'away', 'open');   // 直接停在「信已打開」
+    }
+
+    return {
+      progress(i, n) { p.textContent = i >= n ? '快到了…' : `取件中　${i + 1} / ${n}`; },
+      async finish() {
+        p.textContent = '送到了！';
+        if (!play) return;
+        await arrived;                         // 鴿子還沒飛到就等它
+        post.classList.add('drop', 'away');    // 放下信、飛走
+        await wait(650);
+        post.classList.add('open');            // 開信、拍貼滑出
+        await wait(1150);
+        post.classList.add('out');
+        await wait(380);
+        try { sessionStorage.setItem(KEY, '1'); } catch (e) {}
+      },
     };
   }
 
@@ -1478,9 +1596,10 @@
     if (!key || !KEY_OK.test(key)) { viewBadKey(); return; }
     if (!window.crypto || !crypto.subtle) { viewNoCrypto(); return; }
 
-    const onProgress = viewDecrypting();
+    const dec = viewDecrypting(id);
     try {
-      const urls = await decryptAll(id, key, m, onProgress);
+      const urls = await decryptAll(id, key, m, dec.progress);
+      await dec.finish();
       viewReady(id, m, urls);
     } catch (e) {
       if (e && e.kind === 'key') viewBadKey();

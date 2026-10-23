@@ -436,7 +436,25 @@
   .cue { display: flex; flex-direction: column; align-items: center; gap: 8px;
          font: 600 12px/1 var(--sans); letter-spacing: .4em; text-indent: .4em; color: var(--cream); }
   .cue svg { width: 14px; height: 18px; animation: nudge 1.8s ease-in-out infinite; }
+  .cue::after { content: ""; width: 1px; height: 34px; background: linear-gradient(var(--gold), transparent);
+                transform-origin: top; animation: drip 2.2s ease-in-out infinite; }
   @keyframes nudge { 50% { transform: translateY(6px); } }
+  @keyframes drip { 0% { transform: scaleY(0); opacity: 1; } 60% { transform: scaleY(1); opacity: 1; } 100% { opacity: 0; } }
+  /* 停在首屏太久沒動：提示變亮、箭頭跳大一點 */
+  .cue span { transition: color .6s, text-shadow .6s; }
+  .cue.nudge span { color: var(--gold); text-shadow: 0 0 14px rgba(204, 195, 141, .55); }
+  .cue.nudge svg { color: var(--gold); animation: nudge-big 1.1s cubic-bezier(.3, 0, .3, 1) infinite; }
+  @keyframes nudge-big { 0%, 100% { transform: none; } 45% { transform: translateY(11px); } 65% { transform: translateY(7px); } }
+
+  /* 段落之間的金線：捲動時一路往下畫，畫完才浮出提示字。
+     把視線從上一段牽到下一段，也告訴讀者「下面還有」。 */
+  .thread { display: flex; flex-direction: column; align-items: center; gap: 12px; margin: 6vh auto; }
+  .thread i { width: 1px; height: 12vh; background: linear-gradient(rgba(204, 195, 141, .15), var(--gold));
+              transform-origin: top; transform: scaleY(var(--t, 0)); }
+  .thread b { font-size: 9px; line-height: 1; color: var(--gold); }
+  .thread span { font: 600 12px/1 var(--sans); letter-spacing: .34em; text-indent: .34em; color: var(--cream); }
+  .thread b, .thread span { opacity: clamp(0, calc((var(--t, 0) - .8) * 5), 1);
+                            transform: translateY(calc((1 - var(--t, 0)) * 8px)); }
 
   /* 故事：夜空與校舍 */
   .night { position: relative; overflow: hidden; text-align: center; padding: 16vh 0 14vh;
@@ -451,9 +469,9 @@
     animation: twinkle 4s ease-in-out infinite alternate; }
   @keyframes twinkle { to { opacity: .45; } }
   .night .t1, .night .t2 { font: 600 clamp(24px, 7vw, 34px)/1.75 var(--serif); letter-spacing: .1em; }
-  .night .t2 { margin-top: 8vh; }
+  .night .t2 { margin-top: 0; }
   .night em, .wish em { font-style: normal; color: var(--gold); }
-  .town { position: relative; margin: 12vh auto 0; width: min(100%, 520px); }
+  .town { position: relative; margin: 2vh auto 0; width: min(100%, 520px); }
   .school { display: block; width: 100%; height: auto; overflow: visible; }
   /* 窗戶等雲散開才亮 */
   .school .w { fill: #231d38; transition: fill .6s ease; }
@@ -483,7 +501,7 @@
   .home-btns .btn { width: auto; flex: 1; max-width: 220px; min-height: 48px; border-radius: 999px; font-family: var(--serif); }
 
   /* 章節標題：大字中文 + ——◇ ENGLISH ◇—— */
-  .sec { padding: 14vh 0 4vh; text-align: center; }
+  .sec { padding: 4vh 0 4vh; text-align: center; }
   .sec-h h2 { font: 700 clamp(26px, 7.4vw, 34px)/1.3 var(--serif); letter-spacing: .32em; text-indent: .32em; color: var(--gold); }
   .sec-h .en { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 14px;
                font: 600 12px/1 var(--sans); letter-spacing: .32em; color: var(--cream); }
@@ -518,7 +536,8 @@
     .cloud { transition: none; }
     .town.in .school .w { transition-delay: 0s; }
     .h-stage, .h-top { transform: none; opacity: 1; }
-    .cue svg, .h-sign, .h-arch::after, .night::before, .finder .focus { animation: none; }
+    .cue svg, .cue::after, .h-sign, .h-arch::after, .night::before, .finder .focus { animation: none; }
+    .thread { --t: 1 !important; }
     .sk, .step.now .dot, main > * { animation: none; }
     * { transition-duration: .01ms !important; }
   }
@@ -607,6 +626,7 @@
     ask: '如果只能選一位，\n你最想跟*哪位老師*合照？',
     askNote: '每一則願望，攝影組都會看到。',
     pickup: '已經拿到拍貼了？掃上面的 QR Code 就能取件。',
+    guides: ['', '往下滑，雲會散開', '最後，一個問題'],   // 三條金線下的提示字，留空就只有線
     fab: '許願合照',
   }, (window.SCAN_CONFIG || {}).HOME || {});
 
@@ -852,6 +872,13 @@
     if (delay) node.style.setProperty('--d', delay + 's');
     return node;
   }
+  function thread(label) {
+    const t = el('div', 'thread');
+    t.setAttribute('aria-hidden', 'true');
+    t.append(el('i'), el('b', null, '◇'));
+    if (label) t.appendChild(el('span', null, label));
+    return t;
+  }
   function secHead(zh, en) {
     const h = el('div', 'sec-h');
     h.appendChild(el('h2', null, zh));
@@ -979,15 +1006,18 @@
     stage.appendChild(rv(arch, 0.55));
     if (signs[1]) stage.appendChild(rv(el('span', 'h-sign r', signs[1]), 1.05));
     hero.appendChild(stage);
-    const cue = html('div', 'cue', '往下滑<svg viewBox="0 0 14 18" aria-hidden="true"><path d="M7 1v15M1 10l6 6 6-6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+    const cue = html('div', 'cue', '<span>往下滑</span><svg viewBox="0 0 14 18" aria-hidden="true"><path d="M7 1v15M1 10l6 6 6-6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>');
     hero.appendChild(rv(cue, 1.3, 'drop'));
     w.appendChild(hero);
 
     // ② 故事：夜空、校舍、信
     const night = el('section', 'night');
     const ni = el('div', 'home-in');
+    const guides = H.guides || [];
     ni.appendChild(rv(html('p', 't1', rich(H.t1))));
+    ni.appendChild(thread(guides[0]));
     ni.appendChild(rv(html('p', 't2', rich(H.t2))));
+    ni.appendChild(thread(guides[1]));
     night.appendChild(ni);
     const town = html('div', 'town', schoolSvg() +
       [['c3', '#a87266'], ['c4', '#a87266'], ['c1', '#c08c7a'], ['c2', '#c08c7a']]
@@ -1009,6 +1039,7 @@
     const wish = el('section', 'sec wish');
     wish.id = 'wish';
     const wi = el('div', 'home-in');
+    wi.appendChild(thread(guides[2]));
     wi.appendChild(rv(secHead('許願池', 'MAKE A WISH')));
     wi.appendChild(rv(html('p', 'line', rich(H.ask)), 0.1));
     const fb = feedbackBlock(true);
@@ -1037,7 +1068,13 @@
     }
 
     // 開場結束之後才開始讓主視覺進場，不然動畫在開場後面就演完了
-    runGate(() => { revealOnScroll(w); updateScroll(); });
+    threads = [...w.querySelectorAll('.thread')];
+    runGate(() => {
+      revealOnScroll(w);
+      updateScroll();
+      // 進站後 2.5 秒還停在最上面，就讓「往下滑」亮起來、箭頭跳大一點
+      setTimeout(() => { if (scrollY < 40) cue.classList.add('nudge'); }, 2500);
+    });
   }
 
   // 開場：觀景窗對焦 → 快門闔上 → 閃光 → 黑白頁面顯影成彩色。不用按，約一秒。
@@ -1078,18 +1115,27 @@
     const io = once({ threshold: 0.2, rootMargin: '0px 0px -6% 0px' });
     items.forEach((n) => io.observe(n));
     // 校舍要整棟進到畫面裡、先看到被雲蓋住，雲才散開
-    const tio = once({ threshold: 0.7 });
+    // 底部 30% 不算：校舍要捲到畫面中上段才散開，提示字「雲會散開」出現時雲還蓋著
+    const tio = once({ threshold: 0.6, rootMargin: '0px 0px -30% 0px' });
     towns.forEach((n) => tio.observe(n));
   }
 
   // 捲動連動：頂端金線、主視覺淡出與視差、右下角按鈕
   let wishSeen = false;
+  let threads = [];
   function updateScroll() {
     const max = document.documentElement.scrollHeight - innerHeight;
     $('prog').style.setProperty('--p', max > 0 ? Math.min(1, scrollY / max) : 0);
     if (!document.body.classList.contains('home')) return;
     document.body.style.setProperty('--hs', Math.min(1, scrollY / innerHeight).toFixed(3));
     $('fab').classList.toggle('show', scrollY > innerHeight * 0.6 && !wishSeen);
+    if (scrollY > 40) { const c = document.querySelector('.cue.nudge'); if (c) c.classList.remove('nudge'); }
+    // 金線：線的上端進到畫面 85% 高度開始畫，到 40% 高度畫完
+    threads.forEach((t) => {
+      const top = t.getBoundingClientRect().top;
+      const v = (innerHeight * 0.85 - top) / (innerHeight * 0.45);
+      t.style.setProperty('--t', Math.max(0, Math.min(1, v)).toFixed(3));
+    });
   }
   let ticking = false;
   addEventListener('scroll', () => {

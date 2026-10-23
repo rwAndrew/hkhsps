@@ -1106,6 +1106,8 @@
   function viewReady(id, m, urls) {
     const dir = base + '/' + encodeURIComponent(id) + '/';
     const urlOf = (name) => (urls ? urls[name] : dir + encodeURIComponent(name));
+    // 下載的檔名帶上系統名與編號：多組都下載時才分得出來，也不會變成 composite (1).jpg
+    const fileName = (name) => cfg.SITE_TITLE + "_" + id + (name === m.composite ? "" : "_" + niceName(name).replace(/\.jpg$/i, "")) + ".jpg";
 
     const root = el('div', 'ready');
     const side = el('div', 'side');
@@ -1118,7 +1120,7 @@
       ib.type = 'button';
       ib.setAttribute('aria-label', '放大檢視拍貼成品');
       ib.appendChild(fadeImg(src, '拍貼成品', 'strip'));
-      ib.onclick = () => openViewer(src, niceName(m.composite));
+      ib.onclick = () => openViewer(src, fileName(m.composite));
       stage.appendChild(ib);
       root.appendChild(stage);
 
@@ -1130,7 +1132,7 @@
 
       const actions = el('div', 'actions');
       const dl = el('a', 'btn btn-primary');
-      bindDownload(dl, src, niceName(m.composite));
+      bindDownload(dl, src, fileName(m.composite));
       dl.appendChild(icon('download'));
       dl.appendChild(el('span', null, '下載拍貼圖'));
       // 跨網站時由 downloadFile 自己跳提示，這裡只處理同網站的
@@ -1141,7 +1143,7 @@
       // 不支援的瀏覽器（多數桌機）不顯示這顆，不放一顆按了沒用的按鈕。
       if (canShareFiles()) {
         const sh = button('btn-secondary', '存到相簿或分享', 'share');
-        sh.onclick = () => shareFile(sh, src, niceName(m.composite));
+        sh.onclick = () => shareFile(sh, src, fileName(m.composite));
         actions.appendChild(sh);
       }
       side.appendChild(actions);
@@ -1189,13 +1191,13 @@
         const img = fadeImg(url, '原始照片 ' + (i + 1));
         img.loading = 'lazy';
         ib.appendChild(img);
-        ib.onclick = () => openViewer(url, niceName(name));
+        ib.onclick = () => openViewer(url, fileName(name));
         tile.appendChild(ib);
 
         const cap = el('div', 'cap');
         cap.appendChild(el('span', null, '照片 ' + (i + 1)));
         const d = el('a', 'dl');
-        bindDownload(d, url, niceName(name));
+        bindDownload(d, url, fileName(name));
         d.setAttribute('aria-label', '下載照片 ' + (i + 1));
         d.appendChild(icon('download'));
         cap.appendChild(d);

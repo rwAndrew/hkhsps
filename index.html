@@ -474,8 +474,8 @@
   .letter p { margin-top: 18px; color: var(--muted); text-wrap: balance; }
   .formula { display: flex; justify-content: center; align-items: baseline; flex-wrap: wrap; gap: 6px 12px;
              margin-top: 34px !important; color: var(--cream) !important; font: 600 15px/1.4 var(--serif); letter-spacing: .1em; }
-  .formula b { font: 700 30px/1 var(--serif); color: var(--gold); margin-right: 4px; }
-  .formula .x { color: var(--gold); opacity: .7; }
+  .formula { font-size: 22px !important; letter-spacing: .24em; text-indent: .24em; }
+  .formula em { font: 700 36px/1 var(--serif); color: var(--gold); margin: 0 3px; }
   .motto { font: 600 20px/1.6 var(--serif) !important; letter-spacing: .2em; color: var(--cream) !important; margin-top: 34px !important; }
   .sign { font-family: var(--serif); line-height: 1.9; }
   .sign i { font-size: 18px; color: var(--gold); }
@@ -594,10 +594,14 @@
     title: '小港高中',
     subtitle: '校慶拍貼',
     signs: ['SMILE', 'CHEESE'],
-    t1: '走過這裡的人，\n都會想起一個人',
-    t2: '你——\n會想起*哪位老師*？',
-    story: ['校慶這天，攝影組把一台相機、兩台印表機，\n搬進了校園。', '和朋友擠進同一格，按下快門，\n拍貼當場印出來，一人一條帶回家。'],
-    formula: [['3', '格畫面'], ['2', '條拍貼'], ['1', '個 QR Code']],
+    t1: '進來港中後，\n遇到的所有老師',
+    t2: '你......\n會想和*哪位老師*合影？',
+    story: [
+      '校慶這天，攝影組把一台相機、兩台印表機，\n搬進了校園。',
+      '和朋友同一格，按下快門，\n當場印出來，一人一條帶回家。',
+      '或是你想和喜歡的老師合拍\n就如同藝人相框一樣\n印出拍貼後你喜歡的老師將站在你的左邊',
+    ],
+    formula: '青春*3*格　定格青春',
     motto: '願這一格，替你記得。',
     signature: '港中攝影組 全體人員',
     ask: '如果只能選一位，\n你最想跟*哪位老師*合照？',
@@ -991,17 +995,7 @@
     night.appendChild(town);
     const letter = el('div', 'home-in letter');
     (H.story || []).forEach((t, n) => letter.appendChild(rv(html('p', null, rich(t)), n * 0.12)));
-    if (H.formula && H.formula.length) {
-      const f = el('p', 'formula');
-      H.formula.forEach((x, n) => {
-        if (n) f.appendChild(el('span', 'x', '×'));
-        const it = el('span');
-        it.appendChild(el('b', null, x[0]));
-        it.appendChild(document.createTextNode(x[1]));
-        f.appendChild(it);
-      });
-      letter.appendChild(rv(f));
-    }
+    if (H.formula) letter.appendChild(rv(html('p', 'formula', rich(H.formula))));
     if (H.motto) letter.appendChild(rv(el('p', 'motto', H.motto)));
     if (H.signature) letter.appendChild(rv(html('p', 'sign', '<i>Yours Truly,</i><br>' + esc(H.signature)), 0.15));
     const btns = el('div', 'home-btns');

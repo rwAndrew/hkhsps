@@ -18,6 +18,13 @@ window.SCAN_CONFIG = {
   // 上傳後用 `node export-web.js --check https://rwandrew.github.io/hkhsps-photos` 驗證。
   PHOTO_BASE: 'https://rwandrew.github.io/hkhsps-photos/data',
 
+  // 意見箱：填了 Google 表單的連結（https 開頭），取件頁就會多一個「去填意見」的按鈕。
+  // 留空字串 = 完全不顯示。表單怎麼建、怎麼接 Discord，看主系統資料夾的「意見箱\設定說明.md」。
+  FEEDBACK_URL: '',
+  FEEDBACK_TITLE: '意見箱',
+  FEEDBACK_TEXT: '想跟哪位老師合影？告訴我們。',
+  FEEDBACK_BUTTON: '去填意見',
+
   // 照片過了保留期限、已經刪除之後，改成 true 再推上去。
   // 不改的話，客人掃 QR 會看到「今晚 8 點前上線」，但其實永遠不會有了。
   EXPIRED: false,

@@ -273,6 +273,11 @@
     .state { padding-top: 9vh; }
   }
 
+  /* 意見箱 */
+  .feedback { margin-top: 48px; text-align: center; }
+  .feedback .small { margin: 14px 0 20px; }
+  .feedback .btn { max-width: 320px; margin: 0 auto; }
+
   /* 圖片載入前後 */
   img[data-fade] { opacity: 0; transition: opacity .3s; }
   img[data-fade].loaded { opacity: 1; }
@@ -359,6 +364,10 @@
     PHOTO_BASE: '/data',
     EXPIRED: false,
     EXPIRED_TEXT: '照片已經到期刪除',
+    FEEDBACK_URL: '',
+    FEEDBACK_TITLE: '意見箱',
+    FEEDBACK_TEXT: '想跟哪位老師合影？告訴我們。',
+    FEEDBACK_BUTTON: '去填意見',
   }, window.SCAN_CONFIG || {});
 
   const $ = (id) => document.getElementById(id);
@@ -388,6 +397,7 @@
     qr: '<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><path d="M14 14h2v2h-2zM18 14h2M14 18h2v2m2-2h2v2"/>',
     refresh: '<path d="M20 11a8 8 0 10-2.3 5.7M20 5v6h-6"/>',
     archive: '<path d="M4 7h16v3H4zM6 10v8a1 1 0 001 1h10a1 1 0 001-1v-8M10 14h4"/>',
+    chat: '<path d="M5 6h14a1 1 0 011 1v8a1 1 0 01-1 1h-7l-4 3v-3H5a1 1 0 01-1-1V7a1 1 0 011-1z"/>',
     lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/>',
   };
   function icon(name) {
@@ -475,6 +485,26 @@
     return w;
   }
 
+  // 意見箱連結。沒設定、或不是 https 開頭就不顯示：
+  // 一來沒填的時候不會出現壞掉的按鈕，二來擋掉 javascript: 之類的怪網址。
+  function feedbackBlock() {
+    const url = String(cfg.FEEDBACK_URL || '').trim();
+    if (!/^https:\/\//i.test(url)) return null;
+    const box = el('section', 'feedback');
+    const h = el('h2', 'orn-title');
+    h.appendChild(el('span', 't', cfg.FEEDBACK_TITLE));
+    box.appendChild(h);
+    box.appendChild(el('p', 'small', cfg.FEEDBACK_TEXT));
+    const a = el('a', 'btn btn-secondary');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.appendChild(icon('chat'));
+    a.appendChild(el('span', null, cfg.FEEDBACK_BUTTON));
+    box.appendChild(a);
+    return box;
+  }
+
   // 三步進度：拍攝 ✓ → 整理中（現在）→ 取件
   function stepsView(now) {
     const labels = ['拍攝', '整理中', '取件'];
@@ -522,6 +552,8 @@
     w.appendChild(stepsView(2));
     w.appendChild(btn);
     w.appendChild(status);
+    const fb = feedbackBlock();
+    if (fb) w.appendChild(fb);
     show(false, w);
   }
 
@@ -661,6 +693,9 @@
       box.appendChild(grid);
       side.appendChild(box);
     }
+
+    const fb = feedbackBlock();
+    if (fb) side.appendChild(fb);
 
     root.appendChild(side);
     show(true, root);

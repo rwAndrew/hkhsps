@@ -1,7 +1,7 @@
 // 掃描頁設定。改這裡就好，不用動 index.html。
 window.SCAN_CONFIG = {
   // 頁面頂端的標題，與標題上方的英文小標（留空字串就不顯示英文小標）
-  SITE_TITLE: '拍貼取件',
+  SITE_TITLE: '青春三格',
   SITE_EN: 'PHOTO STRIP',
 
   // 照片還沒上傳時顯示的大字
@@ -21,7 +21,7 @@ window.SCAN_CONFIG = {
   // 首頁文案。只寫想改的項目就好，沒寫的用預設值。*星號* 包住的字變金色，\n 是換行。
   HOME: {
     title: '小港高中',
-    subtitle: '校慶拍貼',
+    subtitle: '青春三格',
     t1: '高中三年，\n總有幾個想記住的瞬間',
     t2: '你......\n想和*誰*一起入鏡？',
     story: [

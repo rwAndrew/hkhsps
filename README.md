@@ -1,4 +1,4 @@
-# 拍貼取件頁
+# 青春三格 — 取件頁
 
 校慶拍貼攤位的 QR Code 掃描頁。客人掃紙上的 QR → 開啟 `https://hkhsps.vercel.app/p/編號` → 下載照片。
 

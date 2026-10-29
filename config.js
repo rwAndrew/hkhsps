@@ -4,8 +4,14 @@ window.SCAN_CONFIG = {
   SITE_TITLE: '青春三格',
   SITE_EN: 'PHOTO STRIP',
 
-  // 照片還沒上傳時顯示的大字
-  READY_TEXT: '今晚 8 點前上線',
+  // 照片還沒上線時：大字、說明、首頁「取件」那段的小字。
+  // 有即拍即傳時用下面這組；整天沒網路、只能晚上補傳的話，改成：
+  //   READY_TEXT: '今晚 8 點前上線'
+  //   READY_LEAD: '你的照片還在整理中。上線之後回到這個頁面重新檢查，就能看到了。'
+  //   READY_WHEN: '照片今晚 8 點前上線'
+  READY_TEXT: '照片上傳中',
+  READY_LEAD: '通常拍完 10 分鐘內就會上線，最晚今晚 8 點前。過幾分鐘再按「重新檢查」。',
+  READY_WHEN: '拍完約 10 分鐘上線，最晚今晚 8 點前',
 
   // 照片放在哪。頁面會去讀 <PHOTO_BASE>/<編號>/manifest.json
   //

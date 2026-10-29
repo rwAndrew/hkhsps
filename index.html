@@ -616,7 +616,9 @@
   const cfg = Object.assign({
     SITE_TITLE: '青春三格',
     SITE_EN: 'PHOTO STRIP',
-    READY_TEXT: '今晚 8 點前上線',
+    READY_TEXT: '照片上傳中',
+    READY_LEAD: '通常拍完 10 分鐘內就會上線，最晚今晚 8 點前。過幾分鐘再按「重新檢查」。',
+    READY_WHEN: '拍完約 10 分鐘上線，最晚今晚 8 點前',
     PHOTO_BASE: '/data',
     EXPIRED: false,
     EXPIRED_TEXT: '照片已經到期刪除',
@@ -968,7 +970,7 @@
     pi.appendChild(rv(badge, 0.1));
     pi.appendChild(rv(html('p', 'line', rich(H.pickLine)), 0.15));
     pi.appendChild(rv(html('p', 'sub', rich(H.pickSub)), 0.25));
-    if (cfg.READY_TEXT) pi.appendChild(rv(el('p', 'when', '照片' + cfg.READY_TEXT), 0.35));
+    if (cfg.READY_WHEN) pi.appendChild(rv(el('p', 'when', cfg.READY_WHEN), 0.35));
     pick.appendChild(pi);
     w.appendChild(pick);
     w.appendChild(html('footer', 'h-foot', esc(H.title) + ' · ' + esc(H.signature)));
@@ -1058,7 +1060,7 @@
 
   // 照片還沒上傳（manifest 404）
   function viewPending(id, key) {
-    const w = stateView('clock', cfg.READY_TEXT, '你的照片還在整理中。上線之後回到這個頁面重新檢查，就能看到了。');
+    const w = stateView('clock', cfg.READY_TEXT, cfg.READY_LEAD);
     const btn = button('btn-primary', '重新檢查', 'refresh');
     const status = el('p', 'small status', '檢查時間　' + hhmm());
     status.id = 'status';
